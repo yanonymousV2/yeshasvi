@@ -1,12 +1,5 @@
 /* Blog: uses the design kit's tokens, so every visual style and font pairing applies here too. */
-.b-wrap { max-width: 760px; margin: 0 auto; padding: 0 var(--gutter) 120px; }
-.b-top { display: flex; align-items: center; gap: 14px; height: 72px; }
-.b-top .brand { display: flex; align-items: center; gap: 10px; font-weight: 600; text-decoration: none; margin-right: auto; }
-.b-top .brand img { width: 26px; height: 26px; }
-.b-top nav { display: flex; align-items: center; gap: 4px; }
-.b-top nav a { font: 500 13px var(--mono); color: var(--ink-2); text-decoration: none; padding: 7px 10px; border-radius: 8px; }
-.b-top nav a:hover, .b-top nav a[aria-current="page"] { color: var(--ink); background: var(--bg-sunk); }
-.b-top select { font: 500 12.5px var(--sans); color: var(--ink); background: var(--bg-sunk); border: 1px solid var(--line); border-radius: 8px; padding: 6px 8px; cursor: pointer; }
+.b-wrap { max-width: 760px; margin: 0 auto; padding: 72px var(--gutter) 120px; }
 
 /* index */
 .b-head { padding: clamp(40px, 9vh, 96px) 0 36px; display: grid; gap: 16px; }
@@ -70,6 +63,5 @@
 @media (max-width: 600px) {
   .post-row { grid-template-columns: minmax(0, 1fr); gap: 6px; }
   .post-row time { padding-top: 0; }
-  .b-top nav a.hide-sm { display: none; }
-  .prose { font-size: 16.5px; }
+    .prose { font-size: 16.5px; }
 }

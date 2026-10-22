@@ -1,0 +1,35 @@
+---
+// One nav for every page: frosted pill, reading-progress line and the style/font toolbar.
+import '../styles/nav.css';
+import { content as C } from '../data/content';
+import { url } from '../lib/url';
+
+interface Props { current: 'home' | 'blog' }
+const { current } = Astro.props;
+// On the homepage the section links are in-page anchors; elsewhere they point back home.
+const home = current === 'home' ? '' : url('/');
+---
+<div class="m-progress" aria-hidden="true"></div>
+<nav class="m-nav" id="mnav" aria-label="Site">
+  <a class="brand" href={url('/')}><img src={C.logo} alt="" width="24" height="24">{C.name}</a>
+  <a class="lk hide-sm" href={`${home}#journey`}>journey</a>
+  <a class="lk hide-sm" href={`${home}#work`}>work</a>
+  <a class="lk" href={C.blog} aria-current={current === 'blog' ? 'page' : undefined}>blog</a>
+  <a class="btn btn-primary btn-sm" href={C.linkedin} target="_blank" rel="noopener">LinkedIn ↗</a>
+</nav>
+<script is:inline>
+  (() => {
+    const nav = document.getElementById('mnav'), root = document.documentElement;
+    let ticking = false;
+    const update = () => {
+      ticking = false;
+      const max = root.scrollHeight - innerHeight;
+      root.style.setProperty('--sp', max > 0 ? (scrollY / max).toFixed(4) : 0);
+      nav.classList.toggle('scrolled', scrollY > 20);
+    };
+    addEventListener('scroll', () => { if (!ticking) { ticking = true; requestAnimationFrame(update); } }, { passive: true });
+    addEventListener('resize', update);
+    update();
+    KIT.toolbar('site');
+  })();
+</script>

@@ -1,19 +1,6 @@
 /* Homepage ("Motion"): kinetic hero, pinned journey, spotlight cards, bento, marquee, finale. */
       :root { --sp: 0; }
 body { overflow-x: clip; }
-.m-progress { position: fixed; inset: 0 0 auto 0; height: 2px; z-index: 70; background: var(--accent); transform-origin: 0 50%; transform: scaleX(var(--sp)); }
-.m-nav {
-  position: fixed; top: 14px; left: 50%; z-index: 60; transform: translateX(-50%); width: min(1100px, calc(100% - 28px));
-  display: flex; align-items: center; gap: 14px; padding: 10px 12px 10px 16px; border-radius: 999px;
-  background: color-mix(in srgb, var(--bg) 62%, transparent); border: 1px solid color-mix(in srgb, var(--line) 70%, transparent);
-  backdrop-filter: blur(16px) saturate(1.5); -webkit-backdrop-filter: blur(16px) saturate(1.5);
-  transition: padding .3s, box-shadow .3s;
-}
-.m-nav.scrolled { box-shadow: var(--shadow); padding-top: 7px; padding-bottom: 7px; }
-.m-nav .brand { display: flex; align-items: center; gap: 10px; font-weight: 600; text-decoration: none; margin-right: auto; }
-.m-nav .brand img { width: 24px; height: 24px; }
-.m-nav a.lk { font: 500 13px var(--mono); color: var(--ink-2); text-decoration: none; padding: 6px 10px; border-radius: 999px; }
-.m-nav a.lk:hover { color: var(--ink); background: var(--bg-sunk); }
 .wrap { max-width: 1160px; margin: 0 auto; padding: 0 var(--gutter); }
 section.m { padding: clamp(80px, 14vh, 160px) 0; }
 .eyebrow { font: 500 12px var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--ink-3); margin-bottom: 18px; display: flex; gap: 10px; align-items: center; }
@@ -137,7 +124,6 @@ section.m { padding: clamp(80px, 14vh, 160px) 0; }
   .c7, .c5, .c6 { grid-column: span 12; }
   .j-pin { padding-top: 84px; }
   .j-svg .nd text { font-size: 11px; }
-  .m-nav a.lk.hide-sm { display: none; }
 }
 @media (max-width: 560px) {
   .j-svg .nd text { display: none; }

@@ -5,6 +5,7 @@ import { url } from '../lib/url';
 // the inline script only adds motion and mounts the interactive widgets.
 // Animates transform/opacity only; becomes a static page under prefers-reduced-motion.
 import Base from '../layouts/Base.astro';
+import SiteNav from '../components/SiteNav.astro';
 import '../styles/motion.css';
 import { content as C, totalMs } from '../data/content';
 
@@ -43,14 +44,7 @@ const [core, desk, res] = C.services;
   </Fragment>
 
   <a class="skip" href="#contact">Skip to contact</a>
-  <div class="m-progress" aria-hidden="true"></div>
-  <nav class="m-nav" id="mnav" aria-label="Site">
-    <a class="brand" href={url('/')}><img src={C.logo} alt="" width="24" height="24">{C.name}</a>
-    <a class="lk hide-sm" href="#journey">journey</a>
-    <a class="lk hide-sm" href="#work">work</a>
-    <a class="lk" href={C.blog}>blog</a>
-    <a class="btn btn-primary btn-sm" href={C.linkedin} target="_blank" rel="noopener">LinkedIn ↗</a>
-  </nav>
+  <SiteNav current="home" />
 
   <main id="m-root">
     <!-- 1. Kinetic hero -->
@@ -330,15 +324,13 @@ const [core, desk, res] = C.services;
       nodes[0].classList.add('on');
       if (reduced) { draw.style.strokeDashoffset = 0; nodes.forEach(n => n.classList.add('on')); caps.forEach(c => c.classList.add('on')); }
 
-      // ---------- scroll engine: --p per [data-scroll], --sp on the root ----------
+      // ---------- scroll engine: --p per [data-scroll] (the nav handles page progress) ----------
       const scrollers = [...root.querySelectorAll('[data-scroll]')];
-      const nav = document.getElementById('mnav'), journey = root.querySelector('.journey');
+      const journey = root.querySelector('.journey');
       let ticking = false;
       function frame() {
         ticking = false;
-        const vh = innerHeight, docH = document.documentElement.scrollHeight - vh;
-        document.documentElement.style.setProperty('--sp', docH > 0 ? (scrollY / docH).toFixed(4) : 0);
-        nav.classList.toggle('scrolled', scrollY > 20);
+        const vh = innerHeight;
         if (reduced) return;
         scrollers.forEach(el => {
           const r = el.getBoundingClientRect();
@@ -392,7 +384,6 @@ const [core, desk, res] = C.services;
         });
       }
 
-      KIT.toolbar('motion');
     })();
   </script>
 </Base>
