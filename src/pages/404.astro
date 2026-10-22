@@ -1,0 +1,44 @@
+---
+// Shown by GitHub Pages for any unknown path under the site.
+import Base from '../layouts/Base.astro';
+import SiteNav from '../components/SiteNav.astro';
+import { content as C } from '../data/content';
+import { url } from '../lib/url';
+---
+<Base title="404 · route not found — Yeshasvi" description="This page doesn't exist. Head back to the homepage or the blog.">
+  <Fragment slot="head">
+    <link rel="stylesheet" href={url('/kit/kit.css')}>
+    <meta name="robots" content="noindex">
+    <style is:global>
+      .nf { max-width: 860px; margin: 0 auto; padding: clamp(120px, 18vh, 180px) var(--gutter) 120px; display: grid; gap: 28px; }
+      .nf .status { display: inline-flex; gap: 10px; align-items: center; font: 600 14px var(--mono); }
+      .nf .status b { background: var(--bad); color: var(--on-bad); padding: 5px 10px; border-radius: 6px; }
+      .nf .display { font-size: clamp(44px, 8vw, 104px); line-height: .95; letter-spacing: -.05em; }
+      .nf .trace { font: 14px/1.9 var(--mono); padding: 20px 22px; margin: 0; overflow-x: auto; white-space: pre-wrap; overflow-wrap: anywhere; }
+      .nf .trace .c { color: var(--ink-3); }
+      .nf .trace .x { color: var(--bad); font-weight: 600; }
+      .nf .trace .p { color: var(--accent); }
+      .nf .lead { font-size: 19px; color: var(--ink-2); margin: 0; max-width: 34em; }
+      .nf .go { display: flex; flex-wrap: wrap; gap: 10px; }
+    </style>
+  </Fragment>
+  <SiteNav current="other" />
+  <main class="nf">
+    <div class="status">HTTP/2 <b>404 Not Found</b></div>
+    <h1 class="display">No route to <em>that page.</em></h1>
+    <pre class="trace card" aria-label="Request trace"><span class="c">$</span> curl -i <span class="p" id="nfPath">{C.blog.replace(/blog\/$/, '')}…</span>
+<span class="c">  client        → ok</span>
+<span class="c">  dns           → ok</span>
+<span class="c">  load balancer → ok</span>
+<span class="x">  gateway       → no route matched. Request dropped.</span></pre>
+    <p class="lead">The page you asked for doesn't exist, or it moved. These routes are healthy:</p>
+    <div class="go">
+      <a class="btn btn-primary" href={url('/')}>Take me home</a>
+      <a class="btn btn-ghost" href={C.blog}>Read the blog</a>
+      <a class="btn btn-ghost" href={url('/#journey')}>Watch the journey</a>
+    </div>
+  </main>
+  <script is:inline>
+    document.getElementById('nfPath').textContent = location.pathname;
+  </script>
+</Base>

@@ -3,7 +3,7 @@ title: "Idempotency keys: how to make retries safe"
 description: "A timeout doesn't tell you whether your request failed or just lost its reply. Idempotency keys let clients retry without charging a card twice. Here's how they work, with a Go implementation."
 pubDate: 2026-10-23
 tags: [api-design, reliability, go, http]
-draft: true
+draft: false
 ---
 
 A client sends `POST /orders`. The server creates the order, charges the card, and starts writing the response. Then the connection drops.

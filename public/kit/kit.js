@@ -27,10 +27,11 @@
     syne: ['DM+Sans:wght@400;500;700', 'Space+Mono:wght@400;700', 'Syne:wght@500;700;800'],
   };
   const loaded = new Set();
-  // Pages that already link the base fonts in <head> shouldn't fetch them twice
-  if (document.querySelector('link[href*="family=Geist:"]')) FAMILIES.base.forEach(f => loaded.add(f));
+  // Skip families the page already links in <head> (base fonts and the default style's)
+  const linked = name => [...document.querySelectorAll('link[href*="fonts.googleapis.com/css2"]')]
+    .some(l => new RegExp('family=' + name.replace(/[+]/g, '\\+') + '(?=[:&]|$)').test(l.href));
   function loadFonts(keys) {
-    const fams = keys.flatMap(k => FAMILIES[k] || []).filter(f => !loaded.has(f));
+    const fams = keys.flatMap(k => FAMILIES[k] || []).filter(f => !loaded.has(f) && !linked(f.split(':')[0]));
     if (!fams.length) return;
     fams.forEach(f => loaded.add(f));
     const l = document.createElement('link');

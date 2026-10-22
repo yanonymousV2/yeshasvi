@@ -4,7 +4,7 @@ import '../styles/nav.css';
 import { content as C } from '../data/content';
 import { url } from '../lib/url';
 
-interface Props { current: 'home' | 'blog' }
+interface Props { current: 'home' | 'blog' | 'other' }
 const { current } = Astro.props;
 // On the homepage the section links are in-page anchors; elsewhere they point back home.
 const home = current === 'home' ? '' : url('/');
