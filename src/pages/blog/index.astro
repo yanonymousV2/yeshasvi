@@ -1,0 +1,40 @@
+---
+import { url } from '../../lib/url';
+import BlogLayout from '../../layouts/BlogLayout.astro';
+import { getPosts, formatDate, readingTime } from '../../lib/blog';
+
+const posts = await getPosts();
+---
+<BlogLayout title="Blog — Yeshasvi" description="Notes on backend systems: the things I build, the trade-offs behind them, and what I learn along the way.">
+  <section class="b-head">
+    <div class="hop-tag"><b>GET</b> /blog <span class="lat">200 OK</span></div>
+    <h1 class="display">Notes from <em>the backend.</em></h1>
+    <p>Write-ups on the systems I build, the trade-offs behind them, and things I learn along the way.</p>
+  </section>
+
+  {posts.length === 0 ? (
+    <div class="empty card">
+      <div class="hop-tag"><b>queue</b> empty</div>
+      <p>The first post is still being written. Subscribe to the <a class="link" href={url('/rss.xml')}>RSS feed</a> to catch it when it lands.</p>
+    </div>
+  ) : (
+    <ul class="posts">
+      {posts.map((post) => (
+        <li>
+          <a class="post-row" href={url(`/blog/${post.id}/`)}>
+            <time datetime={post.data.pubDate.toISOString()}>{formatDate(post.data.pubDate)}</time>
+            <div>
+              <h2>{post.data.title}</h2>
+              <p>{post.data.description}</p>
+              <div class="post-meta">
+                {post.data.draft && <span class="draft-badge">draft</span>}
+                <span>{readingTime(post.body)} min read</span>
+                {post.data.tags.map((t) => <span>#{t}</span>)}
+              </div>
+            </div>
+          </a>
+        </li>
+      ))}
+    </ul>
+  )}
+</BlogLayout>

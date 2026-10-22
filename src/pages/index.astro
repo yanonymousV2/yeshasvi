@@ -1,0 +1,398 @@
+---
+import { url } from '../lib/url';
+// Homepage ("Motion"): kinetic hero, a pinned scroll-linked packet journey, spotlight cards,
+// bento reveals, marquees and a magnetic CTA. All text is rendered here at build time;
+// the inline script only adds motion and mounts the interactive widgets.
+// Animates transform/opacity only; becomes a static page under prefers-reduced-motion.
+import Base from '../layouts/Base.astro';
+import '../styles/motion.css';
+import { content as C, totalMs } from '../data/content';
+
+const strip = (s: string) => s.replace(/<[^>]+>/g, '');
+const pad = (n: number) => String(n).padStart(2, '0');
+const chars = (txt: string, start: number) => [...txt].map((ch, k) => ({ ch: ch === ' ' ? ' ' : ch, i: start + k }));
+
+const SUMMARY: Record<string, string> = {
+  client: "You're the request. Scroll, and watch where you travel.",
+  dns: strip(C.dns.text[0]),
+  lb: C.lb.sub,
+  waf: 'Security is part of the design, not a patch: WAF at the edge, HTTPOnly sessions, TLS everywhere.',
+  gateway: C.routesSub,
+  services: 'A Python monolith split into Go services that talk over gRPC, and a desktop app on three operating systems.',
+  queue: 'Side projects, research and writing, running in the background.',
+  db: C.stack.slice(0, 4).map(([, t]) => (t as string[]).slice(0, 3).join(', ')).join(' · '),
+  response: "200 OK. Let's build something that stays up.",
+};
+
+// Journey path: a gentle wave through one point per hop
+const N = C.hops.length;
+const pts = C.hops.map((_, i) => [60 + i * (880 / (N - 1)), i % 2 ? 105 : 185]);
+let pathD = `M${pts[0][0]},${pts[0][1]}`;
+for (let i = 1; i < N; i++) {
+  const [x0, y0] = pts[i - 1], [x1, y1] = pts[i], mx = (x0 + x1) / 2;
+  pathD += ` C${mx},${y0} ${mx},${y1} ${x1},${y1}`;
+}
+
+// Marquee rows: alternate stack categories between the two rows
+const rows = [0, 1].map((r) => C.stack.filter((_, i) => i % 2 === r).flatMap(([, t]) => t as string[]));
+const [core, desk, res] = C.services;
+---
+<Base title="Yeshasvi — Senior Backend Engineer" description="Yeshasvi is a senior backend engineer in Hyderabad who designs distributed systems in Go and Python. Scroll as an HTTP request through the stack he builds. AWS Certified Solutions Architect.">
+  <Fragment slot="head">
+    <link rel="stylesheet" href={url('/kit/kit.css')}>
+  </Fragment>
+
+  <a class="skip" href="#contact">Skip to contact</a>
+  <div class="m-progress" aria-hidden="true"></div>
+  <nav class="m-nav" id="mnav" aria-label="Site">
+    <a class="brand" href={url('/')}><img src={C.logo} alt="" width="24" height="24">{C.name}</a>
+    <a class="lk hide-sm" href="#journey">journey</a>
+    <a class="lk hide-sm" href="#work">work</a>
+    <a class="lk" href={C.blog}>blog</a>
+    <a class="btn btn-primary btn-sm" href={C.linkedin} target="_blank" rel="noopener">LinkedIn ↗</a>
+  </nav>
+
+  <main id="m-root">
+    <!-- 1. Kinetic hero -->
+    <section class="hero" data-scroll="pin" aria-label="Introduction">
+      <div class="hero-pin"><div class="wrap hero-in">
+        <div class="who"><span><i></i>{C.name}</span><span>{C.role}</span><span>{C.location}</span></div>
+        <h1 class="kinetic display" aria-label="GET /yeshasvi">
+          <span class="ln">{chars('GET', 0).map(({ ch, i }) => <span class="ch accent" style={`--i:${i}`} aria-hidden="true">{ch}</span>)}</span>
+          <span class="ln">{chars('/yeshasvi', 3).map(({ ch, i }) => <span class="ch" style={`--i:${i}`} aria-hidden="true">{ch}</span>)}</span>
+        </h1>
+        <p class="rotator">I design systems that <span class="rot-win"><span class="on">stay up.</span><span>scale.</span><span>fail gracefully.</span><span>ship.</span></span></p>
+        <div class="scroll-cue"><i></i>scroll to send the request</div>
+      </div></div>
+    </section>
+
+    <!-- 2. Pinned journey -->
+    <section class="journey" id="journey" data-scroll="pin" aria-label="The request's journey">
+      <div class="j-pin">
+        <div class="j-top">
+          <div class="j-count" aria-hidden="true"><span>00</span></div>
+          <div class="j-meta"><b id="jms">0 ms</b>hop <span id="jhop">0</span> of {N - 1}</div>
+        </div>
+        <div class="j-stage">
+          <svg class="j-svg" viewBox="0 0 1000 300" aria-hidden="true">
+            <path class="base" d={pathD} /><path class="draw" d={pathD} />
+            <g class="nodes">
+              {pts.map(([x, y], i) => <g class="nd" data-x={x}><circle cx={x} cy={y} r="10" /><text x={x} y={i % 2 ? y - 26 : y + 38}>{C.hops[i].name}</text></g>)}
+            </g>
+            <circle class="pk" r="9" cx={pts[0][0]} cy={pts[0][1]} />
+          </svg>
+          <div class="j-caps">
+            {C.hops.map((h, i) => (
+              <div class="j-cap" class:list={[{ on: i === 0 }]}>
+                <div class="eyebrow"><b>hop {pad(i)}</b>{h.name}</div>
+                <h2 class="display" set:html={h.id === 'client' ? 'You are <em>the request.</em>' : h.title} />
+                <p>{SUMMARY[h.id]}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+        <div class="j-bar"><i></i></div>
+      </div>
+    </section>
+
+    <!-- 3. Roles -->
+    <section class="m"><div class="wrap">
+      <div class="eyebrow rv"><b>load balancer</b>what I do</div>
+      <h2 class="display rv">One engineer, <em>three healthy nodes.</em></h2>
+      <p class="lead rv">{C.lb.sub}</p>
+      <div class="roles">
+        {C.lb.nodes.map((n, i) => (
+          <article class="spot card rv" style={`--d:${i}`}>
+            <span class="num">0{i + 1} / {n.id}</span>
+            <h3>{n.title}</h3>
+            <p>{n.text}</p>
+            <div class="tags">{n.tags.map((t) => <span class="tag">{t}</span>)}</div>
+          </article>
+        ))}
+      </div>
+    </div></section>
+
+    <!-- 4. Work -->
+    <section class="m" id="work"><div class="wrap">
+      <div class="eyebrow rv"><b>services</b>what I've built</div>
+      <h2 class="display rv">Work you can <em>poke at.</em></h2>
+      <div class="bento">
+        <article class="tile card c12 rv"><div class="split">
+          <div style="display:grid;gap:16px;align-content:start">
+            <span class="badge" style="justify-self:start">{core.badge}</span>
+            <h3>{core.title}</h3>
+            <p class="sub" style="margin:0">{core.text}</p>
+            <div class="stat" data-count="400" data-from="2000">400<small>ms between services, after gRPC (was 2,000)</small></div>
+          </div>
+          <div data-w="grpc"></div>
+        </div></article>
+        <article class="tile card c5 rv" style="--d:1">
+          <span class="badge" style="align-self:flex-start">{desk.badge}</span>
+          <h3>{desk.title}</h3>
+          <p>{desk.text}</p>
+          <div class="chips3">{desk.chips!.map(([b, s]) => <div><b>{b}</b><span>{s}</span></div>)}</div>
+        </article>
+        <article class="tile card c7 rv" style="--d:2">
+          <span class="badge" style="align-self:flex-start">{res.badge}</span>
+          <h3>{res.title}</h3>
+          <div data-w="cb"></div>
+        </article>
+      </div>
+    </div></section>
+
+    <!-- 5. Stack marquee -->
+    <section class="m" aria-label="Stack">
+      <div class="eyebrow wrap rv"><b>database</b>the stack, on loop</div>
+      {rows.map((tools, r) => (
+        <div class="marquee">
+          <div class="mq-track" class:list={[{ rev: r === 1 }]}>
+            {tools.map((t) => <span>{t}</span>)}
+            {tools.map((t) => <span aria-hidden="true">{t}</span>)}
+          </div>
+        </div>
+      ))}
+    </section>
+
+    <!-- 6. Security -->
+    <section class="m"><div class="wrap split">
+      <div>
+        <div class="eyebrow rv"><b>waf</b>security</div>
+        <h2 class="display rv">Try to <em>get past it.</em></h2>
+        <p class="lead rv" set:html={C.waf.sub} />
+      </div>
+      <div class="glass rv"><div data-waf>
+        <div class="card w-waf" style="overflow:hidden">
+          <div class="waf-req"><code data-req><span class="verb">GET</span> /yeshasvi</code>
+            <span style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn btn-ghost btn-sm" type="button" data-sqli>Try SQL injection</button><button class="btn btn-ghost btn-sm" type="button" data-flood>Flood it</button></span>
+          </div>
+          <ol class="rules">
+            {C.waf.rules.map((r) => <li class="rule" data-rule={r.key}><span class="st">✓</span><code>{r.code}</code><p>{r.text}</p><span class="verdict">pass</span></li>)}
+          </ol>
+          <div class="waf-res" data-res aria-live="polite"><span class="code">200</span><span>all rules passed. You look friendly.</span></div>
+        </div>
+      </div></div>
+    </div></section>
+
+    <!-- 7. Experience timeline -->
+    <section class="m"><div class="wrap split">
+      <div>
+        <div class="eyebrow rv"><b>gateway</b>experience</div>
+        <h2 class="display rv">The route <em>so far.</em></h2>
+        <p class="lead rv">{C.routesSub} <a class="link" href={C.linkedin} target="_blank" rel="noopener">Full history on LinkedIn ↗</a></p>
+      </div>
+      <div class="tl" data-scroll="view"><i class="tl-draw"></i>
+        {C.routes.map((r, i) => (
+          <div class="tl-item rv" style={`--d:${i}`}>
+            <span class="when">{r.when}</span>
+            <h3><span class="path">{r.path}</span>{r.role}</h3>
+            <p set:html={r.where} />
+          </div>
+        ))}
+      </div>
+    </div></section>
+
+    <!-- 8. Side projects -->
+    <section class="m"><div class="wrap">
+      <div class="eyebrow rv"><b>queue</b>side projects · async</div>
+      <h2 class="display rv">Things I do <em>for fun.</em></h2>
+      <div class="bento">
+        <article class="tile card c7 rv">
+          <span class="badge" style="align-self:flex-start">Go · CLI · open source</span>
+          <h3>{C.sage.title}</h3>
+          <p>{C.sage.text}</p>
+          <div class="install"><code>{C.sage.install}</code><button class="copy-mini" type="button" data-copy={C.sage.install}>copy</button></div>
+          <a class="link" href={C.sage.repo} target="_blank" rel="noopener">View on GitHub ↗</a>
+          <div data-w="sage"></div>
+        </article>
+        <div class="c5" style="display:grid;gap:16px">
+          {C.papers.map((p, i) => (
+            <article class="tile card spot rv" style={`--d:${i + 1}`}>
+              <span class="badge" style="align-self:flex-start">{p.badge}</span>
+              <h3>{p.title}</h3>
+              <p>{p.text}</p>
+              <a class="link" href={p.link} target="_blank" rel="noopener">{p.linkLabel}</a>
+            </article>
+          ))}
+          <article class="tile card spot rv" style="--d:3">
+            <span class="badge" style="align-self:flex-start">writing</span>
+            <h3>Notes from the backend</h3>
+            <p>Write-ups on systems and the trade-offs behind them.</p>
+            <a class="link" href={C.blog}>Read the blog →</a>
+          </article>
+        </div>
+      </div>
+    </div></section>
+
+    <!-- 9. Finale -->
+    <section class="finale wrap" id="contact" aria-label="Contact">
+      <div class="status rv">HTTP/2 <b>200 OK</b> · {totalMs} ms</div>
+      <p class="big display rv">Let's build something that <em>stays up.</em></p>
+      <a class="magnetic rv" href={`mailto:${C.email}`}>{C.email} <span aria-hidden="true">→</span></a>
+      <div class="links rv">
+        <a href={C.linkedin} target="_blank" rel="noopener">linkedin ↗</a>
+        <a href={C.github} target="_blank" rel="noopener">github ↗</a>
+        <a href={C.blog}>blog</a>
+        <button class="copy-mini" type="button" data-copy={C.email}>copy email</button>
+      </div>
+      <p class="on-request rv">Résumé on request: <a href={`mailto:${C.email}?subject=R%C3%A9sum%C3%A9%20request`}>just email me</a>.</p>
+      <div class="rv cert-row">
+        <div class="cert"><img src={C.badge} alt="" width="42" height="42"><div><b>{C.cert.title}</b><span>{C.cert.meta} · </span><a class="link" href={C.credly} target="_blank" rel="noopener">verify ↗</a></div></div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="m-foot wrap">
+    <span>© <span id="year">2026</span> {C.name} · {C.location}</span>
+    <span><a href={C.blog}>blog</a> · <a href={url('/rss.xml')}>rss</a> · connection: keep-alive</span>
+  </footer>
+
+  <script is:inline define:vars={{ hopMs: C.hops.map((h) => h.ms), total: totalMs }}>
+    (() => {
+      const reduced = KIT.reduced, root = document.getElementById('m-root');
+      document.getElementById('year').textContent = new Date().getFullYear();
+      root.querySelectorAll('[data-waf]').forEach(KIT.mount.waf);
+      root.querySelectorAll('[data-w]').forEach(el => KIT.mount[el.dataset.w](el));
+
+      // ---------- reveals: drop the classes afterwards so hover/tilt isn't delayed by the stagger ----------
+      const io = new IntersectionObserver(es => es.forEach(e => {
+        if (!e.isIntersecting) return;
+        const el = e.target; el.classList.add('in'); io.unobserve(el);
+        setTimeout(() => el.classList.remove('rv', 'in'), 900 + (+getComputedStyle(el).getPropertyValue('--d') || 0) * 80);
+      }), { threshold: .15, rootMargin: '0px 0px -8% 0px' });
+      root.querySelectorAll('.rv').forEach(el => io.observe(el));
+
+      // ---------- hero: scale the headline so its widest line fits (any style or font) ----------
+      const h1 = root.querySelector('.kinetic');
+      function fitHero() {
+        h1.style.fontSize = '';
+        const base = parseFloat(getComputedStyle(h1).fontSize);
+        // Measure a hidden copy at the final (bold, settled) state so the running animation isn't disturbed
+        const probe = h1.cloneNode(true);
+        probe.removeAttribute('aria-label');
+        probe.setAttribute('aria-hidden', 'true');
+        Object.assign(probe.style, { position: 'absolute', visibility: 'hidden', left: '0', top: '0', fontSize: base + 'px' });
+        probe.querySelectorAll('.ch').forEach(c => Object.assign(c.style, { animation: 'none', transform: 'none', opacity: '1', fontWeight: '700' }));
+        probe.querySelectorAll('.ln').forEach(l => { l.style.maxWidth = 'none'; });
+        h1.parentElement.appendChild(probe);
+        const widest = Math.max(...[...probe.querySelectorAll('.ln')].map(l => l.scrollWidth));
+        probe.remove();
+        const ps = getComputedStyle(h1.parentElement);
+        const avail = h1.parentElement.clientWidth - parseFloat(ps.paddingLeft) - parseFloat(ps.paddingRight);
+        if (widest > avail) h1.style.fontSize = Math.floor(base * avail / widest * 0.98) + 'px';
+      }
+      fitHero();
+      addEventListener('resize', fitHero);
+      document.fonts?.ready.then(fitHero);
+      document.fonts?.addEventListener?.('loadingdone', fitHero);
+      // Style/font switches change the typeface: refit once its font has loaded
+      new MutationObserver(() => { fitHero(); document.fonts?.ready.then(fitHero); })
+        .observe(document.documentElement, { attributes: true, attributeFilter: ['data-style', 'data-font', 'data-theme'] });
+
+      // ---------- rotating word ----------
+      const words = [...root.querySelectorAll('.rot-win span')];
+      if (!reduced) {
+        let w = 0;
+        setInterval(() => {
+          const prev = words[w];
+          prev.classList.remove('on'); prev.classList.add('out');
+          setTimeout(() => {
+            // Return it below the window instantly; animating this would slide it down through the line
+            prev.classList.add('reset'); prev.classList.remove('out');
+            void prev.offsetWidth;
+            prev.classList.remove('reset');
+          }, 650);
+          w = (w + 1) % words.length; words[w].classList.add('on');
+        }, 2200);
+      }
+
+      // ---------- journey ----------
+      const N = hopMs.length;
+      const svg = root.querySelector('.j-svg'), draw = svg.querySelector('.draw'), pk = svg.querySelector('.pk');
+      const nodes = [...svg.querySelectorAll('.nd')], caps = [...root.querySelectorAll('.j-cap')];
+      const count = root.querySelector('.j-count');
+      const L = draw.getTotalLength();
+      draw.style.strokeDasharray = L; draw.style.strokeDashoffset = L;
+      // Arc length at each node, so the packet reaches node i exactly when hop i becomes active
+      const atNode = nodes.map(n => { const x = +n.dataset.x; let lo = 0, hi = L; for (let k = 0; k < 30; k++) { const m = (lo + hi) / 2; draw.getPointAtLength(m).x < x ? lo = m : hi = m; } return lo; });
+      let curHop = 0;
+      function setHop(i) {
+        if (i === curHop) return;
+        const dir = i > curHop;
+        curHop = i;
+        caps.forEach((c, k) => c.classList.toggle('on', k === i));
+        nodes.forEach((n, k) => n.classList.toggle('on', k <= i));
+        const old = count.querySelector('span:not(.prev):not(.next)');
+        const nu = document.createElement('span'); nu.textContent = String(i).padStart(2, '0'); nu.className = dir ? 'next' : 'prev';
+        count.appendChild(nu);
+        requestAnimationFrame(() => { nu.className = ''; if (old) { old.className = dir ? 'prev' : 'next'; setTimeout(() => old.remove(), 500); } });
+        document.getElementById('jhop').textContent = i;
+      }
+      nodes[0].classList.add('on');
+      if (reduced) { draw.style.strokeDashoffset = 0; nodes.forEach(n => n.classList.add('on')); caps.forEach(c => c.classList.add('on')); }
+
+      // ---------- scroll engine: --p per [data-scroll], --sp on the root ----------
+      const scrollers = [...root.querySelectorAll('[data-scroll]')];
+      const nav = document.getElementById('mnav'), journey = root.querySelector('.journey');
+      let ticking = false;
+      function frame() {
+        ticking = false;
+        const vh = innerHeight, docH = document.documentElement.scrollHeight - vh;
+        document.documentElement.style.setProperty('--sp', docH > 0 ? (scrollY / docH).toFixed(4) : 0);
+        nav.classList.toggle('scrolled', scrollY > 20);
+        if (reduced) return;
+        scrollers.forEach(el => {
+          const r = el.getBoundingClientRect();
+          const p = el.dataset.scroll === 'pin'
+            ? Math.min(1, Math.max(0, -r.top / Math.max(1, r.height - vh)))
+            : Math.min(1, Math.max(0, (vh * .85 - r.top) / Math.max(1, r.height)));
+          el.style.setProperty('--p', p.toFixed(4));
+          if (el !== journey) return;
+          const len = L * p;
+          draw.style.strokeDashoffset = L - len;
+          const pt = draw.getPointAtLength(len); pk.setAttribute('cx', pt.x); pk.setAttribute('cy', pt.y);
+          let i = 0; atNode.forEach((a, k) => { if (len >= a - 1) i = k; });
+          setHop(i);
+          let ms = 0; for (let k = 0; k < i; k++) ms += hopMs[k];
+          const next = atNode[i + 1] ?? L, f = i < N - 1 ? (len - atNode[i]) / Math.max(1, next - atNode[i]) : 1;
+          ms += hopMs[i] * Math.min(1, Math.max(0, f));
+          document.getElementById('jms').textContent = (i === N - 1 ? total : Math.round(ms)) + ' ms';
+        });
+      }
+      const onScroll = () => { if (!ticking) { ticking = true; requestAnimationFrame(frame); } };
+      addEventListener('scroll', onScroll, { passive: true });
+      addEventListener('resize', onScroll);
+      frame();
+
+      // ---------- counter: 2000 -> 400 ms ----------
+      root.querySelectorAll('[data-count]').forEach(el => {
+        const to = +el.dataset.count, from = +el.dataset.from, small = el.querySelector('small').outerHTML;
+        const set = v => el.innerHTML = Math.round(v).toLocaleString() + small;
+        if (reduced) return;
+        set(from);
+        new IntersectionObserver(([e], o) => {
+          if (!e.isIntersecting) return; o.disconnect();
+          const t0 = performance.now();
+          (function tick(now) { const t = Math.min(1, (now - t0) / 1600), k = 1 - Math.pow(1 - t, 4); set(from + (to - from) * k); if (t < 1) requestAnimationFrame(tick); })(t0);
+        }, { threshold: .6 }).observe(el);
+      });
+
+      // ---------- pointer: spotlight, tilt, magnetic (fine pointers only) ----------
+      if (!reduced && matchMedia('(pointer: fine)').matches) {
+        root.querySelectorAll('.spot').forEach(card => {
+          card.addEventListener('pointermove', e => {
+            const r = card.getBoundingClientRect(), x = (e.clientX - r.left) / r.width, y = (e.clientY - r.top) / r.height;
+            card.style.setProperty('--mx', x * 100 + '%'); card.style.setProperty('--my', y * 100 + '%');
+            card.style.transform = `rotateX(${(.5 - y) * 6}deg) rotateY(${(x - .5) * 6}deg)`;
+          });
+          card.addEventListener('pointerleave', () => { card.style.transform = ''; });
+        });
+        root.querySelectorAll('.magnetic').forEach(b => {
+          b.addEventListener('pointermove', e => { const r = b.getBoundingClientRect(); b.style.transform = `translate(${(e.clientX - r.left - r.width / 2) * .18}px, ${(e.clientY - r.top - r.height / 2) * .3}px)`; });
+          b.addEventListener('pointerleave', () => { b.style.transform = ''; });
+        });
+      }
+
+      KIT.toolbar('motion');
+    })();
+  </script>
+</Base>

@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Yeshasvi — Trace layout</title>
+  <link rel="icon" type="image/png" href="../alien-64.png">
+  <link rel="stylesheet" href="kit.css">
+  <script src="content.js"></script>
+  <script src="kit.js"></script>
+  <style>
+    .page { max-width: 820px; margin: 0 auto; padding: 0 var(--gutter) 140px; }
+    .top { display: flex; align-items: center; justify-content: space-between; gap: 12px; height: 72px; }
+    .brand { display: flex; align-items: center; gap: 10px; font-weight: 600; text-decoration: none; }
+    .brand img { width: 24px; height: 24px; }
+    .intro { padding: clamp(48px, 12vh, 120px) 0 40px; }
+    .intro .display { font-size: clamp(40px, 7vw, 76px); margin: 18px 0 20px; }
+    .intro p { font-size: 19px; color: var(--ink-2); margin: 0 0 14px; max-width: 34em; }
+    .meta { font: 500 13px var(--mono); color: var(--ink-3); display: flex; gap: 6px 16px; flex-wrap: wrap; }
+    .term { font: 14px/1.8 var(--mono); color: var(--ink-3); margin: 32px 0 6px; }
+    .term b { color: var(--ink); font-weight: 500; }
+    .controls { display: flex; gap: 8px; margin: 12px 0 18px; }
+    .controls button { font: 500 12px var(--mono); padding: 7px 10px; border: 1px solid var(--line); border-radius: 8px; background: transparent; color: var(--ink-2); cursor: pointer; }
+    .controls button:hover { color: var(--ink); border-color: var(--line-strong); }
+    .trace { border-top: 1px solid var(--line); }
+    .hop { border-bottom: 1px solid var(--line); }
+    .hop summary {
+      list-style: none; cursor: pointer; display: grid; grid-template-columns: 34px 150px 92px minmax(0, 1fr) 18px; gap: 12px; align-items: center;
+      padding: 16px 6px; font: 15px var(--mono); transition: background .15s;
+    }
+    .hop summary::-webkit-details-marker { display: none; }
+    .hop summary:hover { background: var(--bg-sunk); }
+    .hop .n { color: var(--ink-3); text-align: right; }
+    .hop .name { color: var(--ink); font-weight: 600; }
+    .hop .t { color: var(--accent); font-variant-numeric: tabular-nums; }
+    .hop .what { color: var(--ink-3); }
+    .hop .chev { width: 16px; height: 16px; color: var(--ink-3); transition: transform .2s; }
+    .hop[open] .chev { transform: rotate(90deg); }
+    .hop[open] summary .name { color: var(--accent); }
+    .hop-body { padding: 10px 6px 44px 52px; display: grid; grid-template-columns: minmax(0, 1fr); gap: 22px; }
+    .hop-body .display { font-size: clamp(28px, 4vw, 40px); }
+    .hop-body > p, .hop-body .sub { font-size: 17px; margin: 0; color: var(--ink-2); }
+    .route { display: grid; gap: 12px; padding: 18px 0; border-top: 1px dashed var(--line); }
+    .route:first-of-type { border-top: 0; padding-top: 0; }
+    .route header { display: flex; justify-content: space-between; gap: 10px; align-items: baseline; flex-wrap: wrap; }
+    .route .path { font: 600 14px var(--mono); color: var(--accent); margin-right: 10px; }
+    .route h3 { font-family: var(--display); font-weight: var(--display-weight); margin: 0; font-size: 20px; display: inline; letter-spacing: -.01em; }
+    .route .when { font: 12.5px var(--mono); color: var(--ink-3); }
+    .route .where { font-size: 13.5px; color: var(--ink-3); margin-top: -8px; }
+    .svc { display: grid; gap: 16px; padding: 24px; }
+    .svc h3 { font-family: var(--display); font-weight: var(--display-weight); margin: 10px 0 0; font-size: 22px; letter-spacing: -.02em; }
+    .svc p { margin: 0; color: var(--ink-2); }
+    .done { font: 15px/1.8 var(--mono); padding: 22px 6px; color: var(--ink-3); }
+    .done b { color: var(--ok); }
+    .inv { padding: clamp(26px, 5vw, 48px); margin-top: 12px; }
+    .inv .display { font-size: clamp(30px, 5vw, 48px); margin: 16px 0 22px; }
+    @media (max-width: 680px) {
+      .hop summary { grid-template-columns: 24px minmax(0, 1fr) auto 14px; font-size: 14px; }
+      .hop .what { display: none; }
+      .hop-body { padding-left: 6px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <header class="top">
+      <a class="brand" href="#"><img src="../alien-64.png" alt="" width="24" height="24">Yeshasvi</a>
+      <a class="btn btn-primary btn-sm" href="../Yeshasvi.pdf" target="_blank" rel="noopener">Résumé</a>
+    </header>
+    <section class="intro" id="intro"></section>
+    <p class="term" aria-hidden="true">$ <b>traceroute yeshasvi</b><br>traceroute to yeshasvi (Hyderabad, India), 8 hops max</p>
+    <div class="controls"><button type="button" id="openAll">expand all</button><button type="button" id="closeAll">collapse all</button></div>
+    <div class="trace" id="trace"></div>
+    <p class="done" id="done"></p>
+  </div>
+
+  <script>
+    (() => {
+      const C = window.CONTENT, H = KIT.html;
+      document.getElementById('intro').innerHTML = `<div class="meta"><span>● ${C.name}</span><span>${C.role}</span><span>${C.location}</span></div>
+        <h1 class="display"><span class="verb">GET</span> /yeshasvi</h1>
+        <p>${C.lede}</p><p class="dim" style="font-size:15px">Below is the route your request takes. Open any hop.</p>`;
+      const body = {
+        dns: () => `${H.dig()}<div class="sub">${H.dnsText()}</div>`,
+        lb: () => `<p>${C.lb.sub}</p><div data-lb>${H.nodes()}</div>`,
+        waf: () => `<p>${C.waf.sub}</p><div data-waf>${H.waf()}</div>`,
+        gateway: () => `<p>${C.routesSub}</p>${H.timeline()}`,
+        services: () => C.services.map(s => `<article class="svc card"><div><span class="badge">${s.badge}</span><h3>${s.title}</h3></div><p>${s.text}</p>${s.chips ? H.chips(s.chips) : ''}${s.tryThis ? `<p class="try"><b>Try this:</b> ${s.tryThis}</p>` : ''}${s.widget ? `<div data-w="${s.widget}"></div>` : H.caseRows(s.caseRows)}</article>`).join(''),
+        queue: () => `<p>Side projects and research. They run in the background, so they add nothing to your request.</p>
+          <article class="svc card"><div><span class="badge">Go · CLI · open source</span><h3>${C.sage.title}</h3></div><p>${C.sage.text}</p>${H.sageIntro()}<div data-w="sage"></div><a class="link" href="${C.sage.repo}" target="_blank" rel="noopener">View on GitHub ↗</a></article>
+          ${C.papers.map(p => `<article class="svc card"><div><span class="badge">${p.badge}</span><h3>${p.title}</h3></div><p>${p.text}</p><a class="link" href="${p.link}" target="_blank" rel="noopener">${p.linkLabel}</a></article>`).join('')}`,
+        db: () => `${H.stack()}<div class="card" style="padding:16px 18px">${H.cert()}</div>`,
+        response: h => `<div class="inv"><div class="status-line"><span>HTTP/2</span><span class="ok">200 OK</span></div><h2 class="display">${h.title}</h2>${H.json()}<div style="display:flex;gap:10px;margin-top:16px;flex-wrap:wrap"><a class="btn" href="mailto:${C.email}">Email me</a><button class="btn ghost" type="button" data-copy="${C.email}">Copy email</button></div></div>`,
+      };
+      let total = 0;
+      const hops = C.hops.slice(1);
+      document.getElementById('trace').innerHTML = hops.map((h, i) => {
+        total += h.ms;
+        const title = h.id === 'response' ? '' : `<h2 class="display">${h.title}</h2>`;
+        return `<details class="hop" id="${h.id}"${i === 0 ? ' open' : ''}>
+          <summary><span class="n">${i + 1}</span><span class="name">${h.name}</span><span class="t">${total.toFixed(1)} ms</span><span class="what">${h.sub}</span><svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 6 6 6-6 6"/></svg></summary>
+          <div class="hop-body">${title}${body[h.id](h)}</div></details>`;
+      }).join('');
+      document.getElementById('done').innerHTML = `trace complete · <b>200 OK</b> · ${total} ms · 8 hops`;
+      const tr = document.getElementById('trace');
+      tr.querySelectorAll('[data-waf]').forEach(KIT.mount.waf);
+      tr.querySelectorAll('[data-lb]').forEach(KIT.mount.lb);
+      tr.querySelectorAll('[data-w]').forEach(el => KIT.mount[el.dataset.w](el));
+      document.getElementById('openAll').onclick = () => tr.querySelectorAll('details').forEach(d => d.open = true);
+      document.getElementById('closeAll').onclick = () => tr.querySelectorAll('details').forEach(d => d.open = false);
+      KIT.toolbar('trace');
+    })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,41 @@
+---
+import { url } from '../lib/url';
+// Shell for blog pages: shared head + design kit tokens, a small header with a style picker.
+import Base from './Base.astro';
+import '../styles/blog.css';
+import { content as C } from '../data/content';
+
+interface Props {
+  title: string;
+  description: string;
+  type?: 'website' | 'article';
+}
+const { title, description, type } = Astro.props;
+const onIndex = Astro.url.pathname.replace(/\/$/, '') === url('/blog');
+---
+<Base title={title} description={description} type={type}>
+  <Fragment slot="head">
+    <link rel="stylesheet" href={url('/kit/kit.css')}>
+  </Fragment>
+  <div class="b-wrap">
+    <header class="b-top">
+      <a class="brand" href={url('/')}><img src={C.logo} alt="" width="26" height="26">{C.name}</a>
+      <nav aria-label="Site">
+        <a class="hide-sm" href={url('/')}>home</a>
+        <a href={url('/blog/')} aria-current={onIndex ? 'page' : undefined}>blog</a>
+        <a class="hide-sm" href={C.linkedin} target="_blank" rel="noopener">linkedin ↗</a>
+      </nav>
+      <label><span class="sr-only">Visual style</span><select id="blogStyle" aria-label="Visual style"></select></label>
+    </header>
+    <slot />
+  </div>
+  <script is:inline>
+    (() => {
+      // Same style list and storage as the rest of the site
+      const sel = document.getElementById('blogStyle');
+      const cur = KIT.currentStyle();
+      sel.innerHTML = KIT.STYLES.map(([k, n]) => `<option value="${k}"${k === cur ? ' selected' : ''}>${n}</option>`).join('');
+      sel.addEventListener('change', () => KIT.setStyle(sel.value));
+    })();
+  </script>
+</Base>

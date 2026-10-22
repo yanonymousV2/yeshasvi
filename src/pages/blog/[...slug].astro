@@ -1,0 +1,39 @@
+---
+import { url } from '../../lib/url';
+import { render } from 'astro:content';
+import BlogLayout from '../../layouts/BlogLayout.astro';
+import { getPosts, formatDate, readingTime, type Post } from '../../lib/blog';
+import { content as C } from '../../data/content';
+
+export async function getStaticPaths() {
+  const posts = await getPosts();
+  return posts.map((post) => ({ params: { slug: post.id }, props: { post } }));
+}
+
+const { post } = Astro.props as { post: Post };
+const { Content } = await render(post);
+const { title, description, pubDate, updatedDate, tags, draft } = post.data;
+---
+<BlogLayout title={`${title} — Yeshasvi`} description={description} type="article">
+  <article>
+    <header class="p-head">
+      <a class="back" href={url('/blog/')}>← /blog</a>
+      <div class="post-meta">
+        {draft && <span class="draft-badge">draft</span>}
+        <time datetime={pubDate.toISOString()}>{formatDate(pubDate)}</time>
+        {updatedDate && <span>updated {formatDate(updatedDate)}</span>}
+        <span>{readingTime(post.body)} min read</span>
+        {tags.map((t) => <span>#{t}</span>)}
+      </div>
+      <h1 class="display">{title}</h1>
+      <p class="lede">{description}</p>
+    </header>
+    <div class="prose">
+      <Content />
+    </div>
+    <footer class="p-foot">
+      <a href={url('/blog/')}>← more posts</a>
+      <span>questions? <a href={`mailto:${C.email}`}>{C.email}</a></span>
+    </footer>
+  </article>
+</BlogLayout>

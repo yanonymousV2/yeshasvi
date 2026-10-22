@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Yeshasvi — Pipeline layout</title>
+  <link rel="icon" type="image/png" href="../alien-64.png">
+  <link rel="stylesheet" href="kit.css">
+  <script src="content.js"></script>
+  <script src="kit.js"></script>
+  <style>
+    html, body { height: 100%; }
+    body { overflow: hidden; }
+    .pl-top {
+      position: fixed; inset: 0 0 auto 0; z-index: 50; height: 92px; display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 28px;
+      padding: 0 var(--gutter); background: color-mix(in srgb, var(--bg) 90%, transparent); backdrop-filter: blur(10px); border-bottom: 1px solid var(--line);
+    }
+    .brand { display: flex; align-items: center; gap: 10px; font-weight: 600; text-decoration: none; }
+    .brand img { width: 26px; height: 26px; }
+    .pipe { position: relative; height: 56px; }
+    .pipe-line { position: absolute; left: 8px; right: 8px; top: 13px; height: 2px; background: var(--line); }
+    .pipe-fill { position: absolute; left: 0; top: 0; height: 100%; width: 0; background: var(--accent); }
+    .pipe ol { list-style: none; margin: 0; padding: 0; position: absolute; inset: 0 8px; }
+    .pipe li { position: absolute; top: 0; transform: translateX(-50%); }
+    .pipe button { display: grid; justify-items: center; gap: 8px; border: 0; background: none; cursor: pointer; padding: 4px; color: var(--ink-3); font: 500 11px/1 var(--mono); white-space: nowrap; }
+    .pipe button i { width: 14px; height: 14px; border-radius: 50%; border: 2px solid var(--line-strong); background: var(--bg); }
+    .pipe button.passed i { background: var(--accent); border-color: var(--accent); }
+    .pipe button.active { color: var(--ink); }
+    .pipe button.active i { border-color: var(--accent); box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 22%, transparent); }
+    .pipe-packet { position: absolute; top: 9px; left: 8px; width: 10px; height: 10px; border-radius: 50%; background: var(--accent); transform: translateX(-50%); box-shadow: 0 0 14px var(--accent); }
+    .ms { font: 600 13px var(--mono); color: var(--accent); min-width: 7ch; text-align: right; }
+
+    .pl-track { position: fixed; inset: 92px 0 0 0; display: flex; overflow-x: auto; overflow-y: hidden; scroll-snap-type: x mandatory; scrollbar-width: none; }
+    .pl-track::-webkit-scrollbar { display: none; }
+    .pl-panel { flex: 0 0 100vw; height: 100%; scroll-snap-align: start; position: relative; border-right: 1px dashed var(--line); }
+    .pl-inner { height: 100%; overflow-y: auto; padding: clamp(28px, 6vh, 64px) var(--gutter) 120px; }
+    .pl-content { max-width: 1120px; margin: 0 auto; display: grid; grid-template-columns: minmax(0, 1fr); gap: 28px; }
+    .pl-head { display: grid; gap: 14px; }
+    .pl-head .display { font-size: clamp(34px, 5vw, 64px); }
+    .two { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: 40px; align-items: start; }
+    .hero-req { font: 600 clamp(54px, 10vw, 150px)/0.95 var(--mono); letter-spacing: -.05em; margin: 0; }
+    .lede { font-size: clamp(18px, 2vw, 22px); color: var(--ink-2); max-width: 32em; margin: 0; }
+    .hint { font: 500 13px var(--mono); color: var(--ink-3); display: flex; gap: 10px; align-items: center; }
+    .kbd { border: 1px solid var(--line-strong); border-radius: 6px; padding: 2px 7px; }
+    .svc-tabs { display: flex; gap: 8px; flex-wrap: wrap; }
+    .svc-tab { font: 500 13px var(--mono); padding: 10px 14px; border-radius: 10px; border: 1px solid var(--line); background: var(--bg-elev); color: var(--ink-2); cursor: pointer; }
+    .svc-tab[aria-selected="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+    .svc-panel { padding: 28px; display: grid; grid-template-columns: minmax(0, .85fr) minmax(0, 1.15fr); gap: 36px; }
+    .svc-panel[hidden] { display: none; }
+    .svc-panel h3 { font-family: var(--display); font-weight: var(--display-weight); font-size: 24px; margin: 12px 0 10px; letter-spacing: -.02em; line-height: 1.15; }
+    .svc-panel p { color: var(--ink-2); margin: 0 0 16px; }
+    .papers { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+    .paper { padding: 22px; }
+    .paper h3 { font-family: var(--display); font-weight: var(--display-weight); margin: 12px 0 6px; font-size: 20px; }
+    .paper p { color: var(--ink-2); margin: 0 0 12px; }
+    .inv { padding: clamp(28px, 5vw, 56px); }
+    .inv .display { font-size: clamp(34px, 5vw, 64px); margin: 18px 0 26px; }
+    .inv-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr); gap: 28px; }
+    .resp-h { font: 13px/1.9 var(--mono); margin: 0; color: color-mix(in srgb, var(--bg) 68%, var(--ink)); white-space: pre-wrap; }
+    .nav-arrows { position: fixed; right: 20px; bottom: 20px; z-index: 60; display: flex; gap: 8px; align-items: center; font: 500 12px var(--mono); color: var(--ink-3); }
+    .nav-arrows button { width: 44px; height: 44px; border-radius: 50%; border: 1px solid var(--line-strong); background: var(--bg-elev); color: var(--ink); cursor: pointer; font-size: 18px; }
+    .nav-arrows button:disabled { opacity: .35; cursor: default; }
+
+    @media (max-width: 900px) {
+      body { overflow: auto; }
+      .pl-top { position: sticky; height: auto; padding-top: 10px; padding-bottom: 10px; grid-template-columns: auto auto; }
+      .pipe { grid-column: 1 / -1; grid-row: 2; height: 30px; }
+      .pipe button span { display: none; }
+      .pl-track { position: static; display: block; overflow: visible; }
+      .pl-panel { height: auto; border-right: 0; border-bottom: 1px dashed var(--line); }
+      .pl-inner { height: auto; overflow: visible; padding-bottom: 64px; }
+      .two, .svc-panel, .papers, .inv-grid { grid-template-columns: minmax(0, 1fr); }
+      .nav-arrows { display: none; }
+      .ms { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <header class="pl-top">
+    <a class="brand" href="#" data-go="0"><img src="../alien-64.png" alt="" width="26" height="26">Yeshasvi</a>
+    <nav class="pipe" aria-label="Request pipeline">
+      <div class="pipe-line"><i class="pipe-fill" id="fill"></i></div>
+      <ol id="pipeList"></ol>
+      <i class="pipe-packet" id="packet"></i>
+    </nav>
+    <div style="display:flex;align-items:center;gap:14px"><span class="ms" id="ms">0 ms</span><a class="btn btn-primary btn-sm" href="../Yeshasvi.pdf" target="_blank" rel="noopener">Résumé</a></div>
+  </header>
+
+  <main class="pl-track" id="track" tabindex="0" aria-label="Request hops"></main>
+  <div class="nav-arrows"><span id="count">1 / 9</span><button type="button" id="prev" aria-label="Previous hop">←</button><button type="button" id="next" aria-label="Next hop">→</button></div>
+
+  <script>
+    (() => {
+      const C = window.CONTENT, H = KIT.html;
+      const head = (h, i, sub) => `<div class="pl-head"><div class="hop-tag"><b>hop ${String(i).padStart(2, '0')}</b> ${h.name} <span class="lat">+${h.ms} ms</span></div><h2 class="display">${h.title}</h2>${sub ? `<p class="sub" style="font-size:18px;margin:0;max-width:38em">${sub}</p>` : ''}</div>`;
+      const body = {
+        client: () => `<div class="hop-tag"><b>hop 00</b> client · ${C.name} · ${C.role} · ${C.location}</div>
+          <h1 class="hero-req display"><span class="verb">GET</span> /yeshasvi</h1>
+          <p class="lede">${C.lede}</p>
+          <div style="display:flex;gap:10px;flex-wrap:wrap"><button class="btn btn-primary" data-go="1">Send request →</button><button class="btn btn-ghost" data-go="8">Skip to 200 OK</button></div>
+          <p class="hint">scroll, swipe or press <span class="kbd">→</span> to move through the pipeline</p>`,
+        dns: h => head(h, 1) + `<div class="two">${H.dig()}<div class="sub" style="font-size:17px">${H.dnsText()}</div></div>`,
+        lb: h => head(h, 2, C.lb.sub) + `<div data-lb>${H.nodes()}</div><p class="hint">${C.lb.foot.map(([k, v]) => `${k}: <b style="color:var(--ink)">${v}</b>`).join(' · ')}</p>`,
+        waf: h => head(h, 3, C.waf.sub) + `<div data-waf>${H.waf()}</div>`,
+        gateway: h => head(h, 4, C.routesSub) + H.timeline(),
+        services: h => head(h, 5, 'Three worth opening. Two of them you can poke at.') +
+          `<div class="svc-tabs" role="tablist">${C.services.map((s, i) => `<button class="svc-tab" role="tab" aria-selected="${i === 0}" data-tab="${s.id}">${s.tab}</button>`).join('')}</div>` +
+          C.services.map((s, i) => `<div class="svc-panel card" role="tabpanel" data-panel="${s.id}"${i ? ' hidden' : ''}><div><span class="badge">${s.badge}</span><h3>${s.title}</h3><p>${s.text}</p>${s.chips ? H.chips(s.chips) : ''}${s.tryThis ? `<p class="try" style="margin-top:14px"><b>Try this:</b> ${s.tryThis}</p>` : ''}${s.tags ? '<div style="margin-top:14px">' + H.tags(s.tags) + '</div>' : ''}</div><div>${s.widget ? `<div data-w="${s.widget}"></div>` : H.caseRows(s.caseRows)}</div></div>`).join(''),
+        queue: h => head(h, 6, "Side projects and research. They run in the background, so they don't add a millisecond to your request.") +
+          `<div class="two card" style="padding:24px"><div style="display:grid;gap:14px;align-content:start"><span class="badge" style="justify-self:start">Go · CLI · open source</span><h3 class="display" style="font-size:26px">${C.sage.title}</h3><p class="sub" style="margin:0">${C.sage.text}</p>${H.sageIntro()}<a class="link" href="${C.sage.repo}" target="_blank" rel="noopener">View on GitHub ↗</a></div><div data-w="sage"></div></div>
+           <div class="papers">${C.papers.map(p => `<article class="paper card"><span class="badge">${p.badge}</span><h3>${p.title}</h3><p>${p.text}</p><a class="link" href="${p.link}" target="_blank" rel="noopener">${p.linkLabel}</a></article>`).join('')}</div>`,
+        db: h => head(h, 7, 'Indexed for fast lookups.') + H.stack() + `<div class="card" style="padding:18px 20px">${H.cert()}</div>`,
+        response: h => `<div class="inv"><div class="status-line"><span>HTTP/2</span><span class="ok">200 OK</span></div><h2 class="display">${h.title}</h2>
+          <div class="inv-grid"><pre class="resp-h">x-response-time: ${C.hops.reduce((a, x) => a + x.ms, 0)} ms\nx-hops: 8\ncontent-type: application/human\nconnection: keep-alive</pre><div>${H.json()}<div style="display:flex;gap:10px;margin-top:16px;flex-wrap:wrap"><a class="btn" href="mailto:${C.email}">Email me</a><button class="btn ghost" type="button" data-copy="${C.email}">Copy email</button></div></div></div></div>`,
+      };
+      const track = document.getElementById('track');
+      track.innerHTML = C.hops.map(h => `<section class="pl-panel" id="${h.id}" aria-label="${h.name}"><div class="pl-inner"><div class="pl-content">${body[h.id](h)}</div></div></section>`).join('');
+      document.getElementById('pipeList').innerHTML = C.hops.map((h, i) => `<li style="left:${i / (C.hops.length - 1) * 100}%"><button type="button" data-go="${i}"><i></i><span>${h.name}</span></button></li>`).join('');
+
+      // widgets
+      track.querySelectorAll('[data-waf]').forEach(KIT.mount.waf);
+      track.querySelectorAll('[data-lb]').forEach(KIT.mount.lb);
+      track.querySelectorAll('[data-w]').forEach(el => KIT.mount[el.dataset.w](el));
+      track.querySelectorAll('[data-tab]').forEach(t => t.addEventListener('click', () => {
+        track.querySelectorAll('[data-tab]').forEach(o => o.setAttribute('aria-selected', o === t));
+        track.querySelectorAll('[data-panel]').forEach(p => p.hidden = p.dataset.panel !== t.dataset.tab);
+      }));
+
+      // navigation
+      const N = C.hops.length, panels = [...track.children], btns = [...document.querySelectorAll('.pipe button')];
+      const horizontal = () => matchMedia('(min-width: 901px)').matches;
+      let idx = 0, lock = 0;
+      const go = i => {
+        i = Math.max(0, Math.min(N - 1, i));
+        if (horizontal()) track.scrollTo({ left: i * track.clientWidth, behavior: KIT.reduced ? 'auto' : 'smooth' });
+        else panels[i].scrollIntoView({ behavior: KIT.reduced ? 'auto' : 'smooth' });
+      };
+      document.addEventListener('click', e => { const g = e.target.closest('[data-go]'); if (g) { e.preventDefault(); go(+g.dataset.go); } });
+      document.getElementById('prev').onclick = () => go(idx - 1);
+      document.getElementById('next').onclick = () => go(idx + 1);
+      addEventListener('keydown', e => {
+        if (e.target.matches('input, select, textarea')) return;
+        if (e.key === 'ArrowRight' || e.key === 'PageDown') { e.preventDefault(); go(idx + 1); }
+        if (e.key === 'ArrowLeft' || e.key === 'PageUp') { e.preventDefault(); go(idx - 1); }
+      });
+      track.addEventListener('wheel', e => {
+        if (!horizontal() || Math.abs(e.deltaX) > Math.abs(e.deltaY)) return;
+        const inner = e.target.closest('.pl-inner');
+        if (inner) {
+          const canDown = inner.scrollTop + inner.clientHeight < inner.scrollHeight - 2, canUp = inner.scrollTop > 0;
+          if ((e.deltaY > 0 && canDown) || (e.deltaY < 0 && canUp)) return;
+        }
+        e.preventDefault();
+        const now = Date.now();
+        if (now - lock < 700 || Math.abs(e.deltaY) < 8) return;
+        lock = now; go(idx + Math.sign(e.deltaY));
+      }, { passive: false });
+
+      const lat = C.hops.map(h => h.ms);
+      function paint(p) {
+        const i = Math.round(p * (N - 1));
+        idx = i;
+        document.getElementById('fill').style.width = (p * 100) + '%';
+        document.getElementById('packet').style.left = `calc(8px + (100% - 16px) * ${p})`;
+        btns.forEach((b, k) => { b.classList.toggle('passed', k < i); b.classList.toggle('active', k === i); });
+        const whole = Math.floor(p * (N - 1)), f = p * (N - 1) - whole;
+        let ms = 0; for (let k = 0; k < whole; k++) ms += lat[k];
+        ms += (lat[whole] || 0) * f;
+        document.getElementById('ms').textContent = i === N - 1 ? '200 · ' + lat.reduce((a, b) => a + b, 0) + ' ms' : Math.round(ms) + ' ms';
+        document.getElementById('count').textContent = `${i + 1} / ${N}`;
+        document.getElementById('prev').disabled = i === 0;
+        document.getElementById('next').disabled = i === N - 1;
+      }
+      track.addEventListener('scroll', () => { if (horizontal()) paint(track.scrollLeft / Math.max(1, track.scrollWidth - track.clientWidth)); }, { passive: true });
+      addEventListener('scroll', () => {
+        if (horizontal()) return;
+        const y = innerHeight * 0.35;
+        let i = 0; panels.forEach((p, k) => { if (p.getBoundingClientRect().top <= y) i = k; });
+        paint(i / (N - 1));
+      }, { passive: true });
+      addEventListener('resize', () => go(idx));
+      paint(0);
+      KIT.toolbar('pipeline');
+    })();
+  </script>
+</body>
+</html>

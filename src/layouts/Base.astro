@@ -1,0 +1,46 @@
+---
+import { url } from '../lib/url';
+// Shared <head> for every page: metadata, share previews, icons, base fonts,
+// and the design kit (applies the visitor's saved style/font before first paint).
+interface Props {
+  title: string;
+  description: string;
+  image?: string;
+  type?: 'website' | 'article';
+}
+const { title, description, image = url('/og.png'), type = 'website' } = Astro.props;
+// Absolute URLs once `site` is set in astro.config.mjs; relative until then.
+const abs = (p: string) => (Astro.site ? new URL(p, Astro.site).href : p);
+const canonical = Astro.site ? new URL(Astro.url.pathname, Astro.site).href : undefined;
+---
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{title}</title>
+  <meta name="description" content={description}>
+  {canonical && <link rel="canonical" href={canonical}>}
+  <meta property="og:title" content={title}>
+  <meta property="og:description" content={description}>
+  <meta property="og:type" content={type}>
+  <meta property="og:image" content={abs(image)}>
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content={title}>
+  <meta name="twitter:image" content={abs(image)}>
+  <meta name="theme-color" content="#f4f1e8">
+  <link rel="icon" type="image/png" sizes="64x64" href={url('/alien-64.png')}>
+  <link rel="apple-touch-icon" href={url('/alien-180.png')}>
+  <link rel="alternate" type="application/rss+xml" title="Yeshasvi — blog" href={url('/rss.xml')}>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@100..900&family=Geist+Mono:wght@400;500;600&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+  <slot name="head" />
+  <script is:inline src={url('/kit/kit.js')}></script>
+</head>
+<body>
+  <slot />
+</body>
+</html>

@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Yeshasvi — Diagram layout</title>
+  <link rel="icon" type="image/png" href="../alien-64.png">
+  <link rel="stylesheet" href="kit.css">
+  <script src="content.js"></script>
+  <script src="kit.js"></script>
+  <style>
+    html, body { height: 100%; }
+    body { overflow: hidden; }
+    .top { position: fixed; inset: 0 0 auto 0; height: 64px; z-index: 40; display: flex; align-items: center; justify-content: space-between; padding: 0 var(--gutter); }
+    .brand { display: flex; align-items: center; gap: 10px; font-weight: 600; text-decoration: none; }
+    .brand img { width: 26px; height: 26px; }
+    .brand small { font: 400 12px var(--mono); color: var(--ink-3); }
+    .stage { position: fixed; inset: 64px 0 0 0; }
+    .canvas { position: absolute; inset: 24px var(--gutter) 90px; }
+    .wires { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+    .wires path { fill: none; stroke: var(--line-strong); stroke-width: 1.5; vector-effect: non-scaling-stroke; stroke-dasharray: 5 6; }
+    .wires path.main { stroke: color-mix(in srgb, var(--accent) 55%, var(--line-strong)); stroke-dasharray: none; }
+    .wires path.ret { stroke-dasharray: 2 6; }
+    .dnode {
+      position: absolute; transform: translate(-50%, -50%); display: grid; gap: 4px; justify-items: start; min-width: 132px;
+      padding: 12px 14px; text-align: left; cursor: pointer; font: inherit; color: var(--ink);
+      background: var(--bg-elev); border: 1px solid var(--line-strong); border-radius: calc(var(--radius) - 4px); box-shadow: var(--shadow);
+      transition: border-color .2s, transform .2s;
+    }
+    .dnode:hover, .dnode:focus-visible, .dnode.on { border-color: var(--accent); transform: translate(-50%, -50%) scale(1.04); }
+    .dnode .hn { font: 500 10.5px var(--mono); color: var(--accent); letter-spacing: .08em; text-transform: uppercase; }
+    .dnode b { font: 600 15px var(--mono); }
+    .dnode small { font-size: 12px; color: var(--ink-3); }
+    .dnode.big { min-width: 168px; padding: 16px 18px; }
+    .dnode.big b { font-size: 18px; }
+    .packet-dot { position: absolute; width: 12px; height: 12px; border-radius: 50%; background: var(--accent); transform: translate(-50%, -50%); box-shadow: 0 0 16px var(--accent); pointer-events: none; }
+    .intro {
+      position: absolute; left: 30%; top: 20px; max-width: 420px; padding: 22px 24px; z-index: 5;
+    }
+    .intro .display { font-size: 36px; margin: 8px 0 10px; }
+    .intro p { margin: 0 0 12px; color: var(--ink-2); font-size: 15px; }
+    .legend { position: absolute; right: var(--gutter); bottom: 28px; font: 12px var(--mono); color: var(--ink-3); display: flex; gap: 16px; }
+    .legend i { display: inline-block; width: 18px; height: 0; border-top: 2px solid; vertical-align: middle; margin-right: 6px; }
+
+    .drawer {
+      position: fixed; top: 0; right: 0; bottom: 0; width: min(620px, 100vw); z-index: 70; background: var(--bg);
+      border-left: 1px solid var(--line); box-shadow: -30px 0 60px -30px rgba(0,0,0,.35);
+      transform: translateX(105%); transition: transform .35s cubic-bezier(.2,.8,.2,1); display: flex; flex-direction: column;
+    }
+    .drawer.open { transform: none; }
+    .drawer-head { display: flex; align-items: center; gap: 8px; padding: 14px 18px; border-bottom: 1px solid var(--line); }
+    .drawer-head .hop-tag { flex: 1; }
+    .drawer-head button { width: 36px; height: 36px; border-radius: 50%; border: 1px solid var(--line); background: var(--bg-elev); color: var(--ink); cursor: pointer; }
+    .drawer-body { overflow-y: auto; padding: 26px 24px 120px; display: grid; grid-template-columns: minmax(0, 1fr); gap: 22px; align-content: start; }
+    .drawer-body .display { font-size: clamp(28px, 4vw, 40px); }
+    .drawer-body p { margin: 0; color: var(--ink-2); }
+    .drawer .nodes { grid-template-columns: minmax(0, 1fr); }
+    .route { display: grid; gap: 10px; padding: 16px 0; border-top: 1px dashed var(--line); }
+    .route header { display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap; align-items: baseline; }
+    .route .path { font: 600 13px var(--mono); color: var(--accent); }
+    .route h3 { font-family: var(--display); font-weight: var(--display-weight); margin: 0; font-size: 19px; }
+    .route .when { font: 12px var(--mono); color: var(--ink-3); }
+    .scrim { position: fixed; inset: 0; z-index: 65; background: rgba(0,0,0,.25); opacity: 0; pointer-events: none; transition: opacity .3s; }
+    .scrim.open { opacity: 1; pointer-events: auto; }
+    .svc { display: grid; gap: 14px; padding: 20px; }
+    .svc h3 { font-family: var(--display); font-weight: var(--display-weight); margin: 8px 0 0; font-size: 21px; }
+    .inv { padding: 28px; }
+    .inv .display { margin: 14px 0 20px; }
+
+    @media (max-width: 860px) {
+      body { overflow: auto; }
+      .top { position: sticky; background: var(--bg); }
+      .stage { position: static; }
+      .canvas { position: static; display: grid; gap: 10px; padding: 0 var(--gutter) 120px; }
+      .wires, .packet-dot, .legend { display: none; }
+      .intro { position: static; max-width: none; margin: 8px var(--gutter) 18px; }
+      .dnode, .dnode.big { position: static; transform: none; width: 100%; }
+      .dnode:hover, .dnode.on { transform: none; }
+    }
+  </style>
+</head>
+<body>
+  <header class="top">
+    <a class="brand" href="#"><img src="../alien-64.png" alt="" width="26" height="26">Yeshasvi <small>senior backend engineer</small></a>
+    <a class="btn btn-primary btn-sm" href="../Yeshasvi.pdf" target="_blank" rel="noopener">Résumé</a>
+  </header>
+  <main class="stage">
+    <div class="intro card" id="intro"></div>
+    <div class="canvas" id="canvas">
+      <svg class="wires" id="wires" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"></svg>
+      <i class="packet-dot" id="dot" aria-hidden="true"></i>
+    </div>
+    <div class="legend" aria-hidden="true"><span><i style="border-color:var(--accent)"></i>request</span><span><i style="border-color:var(--line-strong);border-top-style:dotted"></i>response</span></div>
+  </main>
+  <div class="scrim" id="scrim"></div>
+  <aside class="drawer" id="drawer" aria-hidden="true" aria-labelledby="drawerTitle">
+    <div class="drawer-head"><div class="hop-tag" id="drawerTag"></div>
+      <button type="button" id="dPrev" aria-label="Previous component">←</button><button type="button" id="dNext" aria-label="Next component">→</button><button type="button" id="dClose" aria-label="Close">✕</button></div>
+    <div class="drawer-body" id="drawerBody"></div>
+  </aside>
+
+  <script>
+    (() => {
+      const C = window.CONTENT, H = KIT.html;
+      document.getElementById('intro').innerHTML = `<div class="hop-tag"><b>${C.name}</b> · ${C.location}</div>
+        <h1 class="display"><span class="verb">GET</span> /yeshasvi</h1>
+        <p>I'm a ${C.role}. This is a backend, the kind I build. <strong>Click any component</strong> to see what I do there.</p>
+        <button class="btn btn-primary btn-sm" type="button" data-open="dns">Start at DNS →</button>`;
+
+      // x, y in % of the canvas
+      const POS = { client: [6, 55], dns: [20, 22], lb: [24, 55], waf: [40, 55], gateway: [55, 55], services: [71, 55], queue: [90, 30], db: [90, 80], response: [40, 88] };
+      const BIG = ['services'];
+      const canvas = document.getElementById('canvas');
+      C.hops.forEach((h, i) => {
+        const b = document.createElement('button');
+        b.type = 'button'; b.className = 'dnode' + (BIG.includes(h.id) ? ' big' : ''); b.dataset.open = h.id;
+        b.style.left = POS[h.id][0] + '%'; b.style.top = POS[h.id][1] + '%';
+        b.innerHTML = `<span class="hn">hop ${String(i).padStart(2, '0')}</span><b>${h.name}</b><small>${h.sub}${h.id === 'services' ? ' · 3 inside' : ''}</small>`;
+        canvas.appendChild(b);
+      });
+      const P = POS;
+      const seg = pts => 'M' + pts.map(p => p.join(',')).join(' L');
+      const main = [P.client, P.lb, P.waf, P.gateway, P.services];
+      const ret = [P.services, [P.services[0], P.response[1]], P.response, [P.client[0], P.response[1]], P.client];
+      document.getElementById('wires').innerHTML =
+        `<path d="${seg([P.client, [P.client[0], P.dns[1]], P.dns])}"/>` +
+        `<path class="main" d="${seg(main)}"/>` +
+        `<path d="${seg([P.services, [80, P.services[1]], [80, P.queue[1]], P.queue])}"/>` +
+        `<path d="${seg([P.services, [80, P.services[1]], [80, P.db[1]], P.db])}"/>` +
+        `<path class="ret" d="${seg(ret)}"/>`;
+
+      // packet travels the request path, then the response path
+      const route = [...main, ...ret.slice(1)];
+      const lens = route.slice(1).map((p, i) => Math.hypot(p[0] - route[i][0], p[1] - route[i][1]));
+      const totalLen = lens.reduce((a, b) => a + b, 0);
+      const dot = document.getElementById('dot');
+      function at(t) {
+        let d = t * totalLen;
+        for (let i = 0; i < lens.length; i++) {
+          if (d <= lens[i]) { const a = route[i], b = route[i + 1], f = d / lens[i]; return [a[0] + (b[0] - a[0]) * f, a[1] + (b[1] - a[1]) * f]; }
+          d -= lens[i];
+        }
+        return route[route.length - 1];
+      }
+      if (!KIT.reduced) {
+        const start = performance.now();
+        (function tick(now) {
+          const [x, y] = at(((now - start) / 7000) % 1);
+          dot.style.left = x + '%'; dot.style.top = y + '%';
+          requestAnimationFrame(tick);
+        })(start);
+      } else dot.style.display = 'none';
+
+      // drawer content
+      const body = {
+        client: () => `<p>${C.lede}</p><p>You're at the client. Every component on the diagram is a part of me. Use the arrows above to walk the path.</p>`,
+        dns: () => `${H.dig()}<div class="sub">${H.dnsText()}</div>`,
+        lb: () => `<p>${C.lb.sub}</p><div data-lb>${H.nodes()}</div>`,
+        waf: () => `<p>${C.waf.sub}</p><div data-waf>${H.waf()}</div>`,
+        gateway: () => `<p>${C.routesSub}</p>${H.timeline()}`,
+        services: () => C.services.map(s => `<article class="svc card"><div><span class="badge">${s.badge}</span><h3>${s.title}</h3></div><p>${s.text}</p>${s.chips ? H.chips(s.chips) : ''}${s.tryThis ? `<p class="try"><b>Try this:</b> ${s.tryThis}</p>` : ''}${s.widget ? `<div data-w="${s.widget}"></div>` : H.caseRows(s.caseRows)}</article>`).join(''),
+        queue: () => `<p>Side projects and research, running in the background.</p><article class="svc card"><div><span class="badge">Go · CLI · open source</span><h3>${C.sage.title}</h3></div><p>${C.sage.text}</p>${H.sageIntro()}<div data-w="sage"></div><a class="link" href="${C.sage.repo}" target="_blank" rel="noopener">View on GitHub ↗</a></article>${C.papers.map(p => `<article class="svc card"><div><span class="badge">${p.badge}</span><h3>${p.title}</h3></div><p>${p.text}</p><a class="link" href="${p.link}" target="_blank" rel="noopener">${p.linkLabel}</a></article>`).join('')}`,
+        db: () => `${H.stack()}<div class="card" style="padding:16px 18px">${H.cert()}</div>`,
+        response: h => `<div class="inv"><div class="status-line"><span>HTTP/2</span><span class="ok">200 OK</span></div><h2 class="display">${h.title}</h2>${H.json()}<div style="display:flex;gap:10px;margin-top:16px;flex-wrap:wrap"><a class="btn" href="mailto:${C.email}">Email me</a><button class="btn ghost" type="button" data-copy="${C.email}">Copy email</button></div></div>`,
+      };
+      const drawer = document.getElementById('drawer'), scrim = document.getElementById('scrim'), dBody = document.getElementById('drawerBody');
+      let cur = -1, lastFocus = null;
+      function open(id) {
+        const i = C.hops.findIndex(h => h.id === id), h = C.hops[i];
+        if (cur === -1) lastFocus = document.activeElement;
+        cur = i;
+        document.getElementById('drawerTag').innerHTML = `<b>hop ${String(i).padStart(2, '0')}</b> ${h.name} <span class="lat">+${h.ms} ms</span>`;
+        dBody.innerHTML = (h.id === 'response' ? '' : `<h2 class="display" id="drawerTitle">${h.id === 'client' ? 'Hi there.' : h.title}</h2>`) + body[h.id](h);
+        dBody.querySelectorAll('[data-waf]').forEach(KIT.mount.waf);
+        dBody.querySelectorAll('[data-lb]').forEach(KIT.mount.lb);
+        dBody.querySelectorAll('[data-w]').forEach(el => KIT.mount[el.dataset.w](el));
+        dBody.scrollTop = 0;
+        document.querySelectorAll('.dnode').forEach(n => n.classList.toggle('on', n.dataset.open === id));
+        drawer.classList.add('open'); scrim.classList.add('open'); drawer.setAttribute('aria-hidden', 'false');
+        document.getElementById('dPrev').disabled = i === 0;
+        document.getElementById('dNext').disabled = i === C.hops.length - 1;
+        document.getElementById('dClose').focus({ preventScroll: true });
+      }
+      function close() {
+        drawer.classList.remove('open'); scrim.classList.remove('open'); drawer.setAttribute('aria-hidden', 'true');
+        document.querySelectorAll('.dnode').forEach(n => n.classList.remove('on'));
+        cur = -1; dBody.innerHTML = '';
+        if (lastFocus) lastFocus.focus({ preventScroll: true });
+      }
+      document.addEventListener('click', e => { const o = e.target.closest('[data-open]'); if (o) open(o.dataset.open); });
+      document.getElementById('dClose').onclick = close;
+      scrim.onclick = close;
+      document.getElementById('dPrev').onclick = () => open(C.hops[Math.max(0, cur - 1)].id);
+      document.getElementById('dNext').onclick = () => open(C.hops[Math.min(C.hops.length - 1, cur + 1)].id);
+      addEventListener('keydown', e => {
+        if (cur < 0) return;
+        if (e.key === 'Escape') close();
+        if (e.key === 'ArrowRight' && !e.target.matches('input')) open(C.hops[Math.min(C.hops.length - 1, cur + 1)].id);
+        if (e.key === 'ArrowLeft' && !e.target.matches('input')) open(C.hops[Math.max(0, cur - 1)].id);
+      });
+      KIT.toolbar('diagram');
+    })();
+  </script>
+</body>
+</html>

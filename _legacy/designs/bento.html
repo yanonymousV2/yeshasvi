@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Yeshasvi — Bento layout</title>
+  <link rel="icon" type="image/png" href="../alien-64.png">
+  <link rel="stylesheet" href="kit.css">
+  <script src="content.js"></script>
+  <script src="kit.js"></script>
+  <style>
+    .page { max-width: 1280px; margin: 0 auto; padding: 0 var(--gutter) 120px; }
+    .top { display: flex; align-items: center; justify-content: space-between; gap: 12px; height: 72px; }
+    .brand { display: flex; align-items: center; gap: 10px; font-weight: 600; text-decoration: none; }
+    .brand img { width: 26px; height: 26px; }
+    .strip { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; font: 500 12.5px var(--mono); color: var(--ink-3); margin: 6px 0 18px; }
+    .strip a { text-decoration: none; padding: 5px 9px; border: 1px solid var(--line); border-radius: 999px; color: var(--ink-2); }
+    .strip a:hover { border-color: var(--accent); color: var(--accent); }
+    .strip .ok { color: var(--ok); font-weight: 600; }
+    .grid { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 14px; }
+    .tile { padding: 24px; display: flex; flex-direction: column; gap: 16px; min-width: 0; scroll-margin-top: 20px; }
+    .tile > .hop-tag { margin-bottom: 2px; }
+    .tile h2.display { font-size: clamp(24px, 2.6vw, 34px); }
+    .tile > p, .tile .sub { margin: 0; color: var(--ink-2); }
+    .s12 { grid-column: span 12; } .s8 { grid-column: span 8; } .s7 { grid-column: span 7; } .s6 { grid-column: span 6; } .s5 { grid-column: span 5; } .s4 { grid-column: span 4; }
+    .hero { justify-content: space-between; padding: clamp(26px, 4vw, 44px); }
+    .hero h1 { font: 600 clamp(48px, 7.4vw, 108px)/0.95 var(--mono); letter-spacing: -.05em; margin: 0; }
+    .hero .lede { font-size: clamp(17px, 1.7vw, 20px); color: var(--ink-2); margin: 0; max-width: 30em; }
+    .who { font: 500 13px var(--mono); color: var(--ink-3); display: flex; gap: 6px 14px; flex-wrap: wrap; }
+    .two { display: grid; grid-template-columns: minmax(0, .85fr) minmax(0, 1.15fr); gap: 28px; }
+    .tile h3 { font-family: var(--display); font-weight: var(--display-weight); margin: 8px 0 0; font-size: 22px; letter-spacing: -.02em; line-height: 1.2; }
+    .inv { padding: clamp(28px, 4vw, 48px); }
+    .inv .display { font-size: clamp(30px, 4.6vw, 56px); margin: 14px 0 24px; }
+    .inv-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr); gap: 28px; align-items: start; }
+    .resp-h { font: 13px/1.9 var(--mono); margin: 0; color: color-mix(in srgb, var(--bg) 68%, var(--ink)); white-space: pre-wrap; }
+    .bento-nodes .nodes { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    #t-dns .dig { font-size: 12px; padding: 16px 18px; }
+    #t-dns .dig .ttl { display: none; }
+    #t-dns .stamp-wrap { margin-bottom: 26px; }
+    #t-dns .stamp { width: 84px; height: 84px; right: -10px; bottom: -32px; }
+    @media (max-width: 1000px) {
+      .s8, .s7, .s6, .s5, .s4 { grid-column: span 12; }
+      .two, .inv-grid { grid-template-columns: minmax(0, 1fr); }
+    }
+    @media (max-width: 760px) { .bento-nodes .nodes { grid-template-columns: minmax(0, 1fr); } }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <header class="top">
+      <a class="brand" href="#"><img src="../alien-64.png" alt="" width="26" height="26">Yeshasvi</a>
+      <a class="btn btn-primary btn-sm" href="../Yeshasvi.pdf" target="_blank" rel="noopener">Résumé</a>
+    </header>
+    <nav class="strip" id="strip" aria-label="Hops"></nav>
+    <main class="grid" id="grid"></main>
+  </div>
+  <script>
+    (() => {
+      const C = window.CONTENT, H = KIT.html, hop = id => C.hops.findIndex(h => h.id === id);
+      const tag = id => { const i = hop(id), h = C.hops[i]; return `<div class="hop-tag"><b>hop ${String(i).padStart(2, '0')}</b> ${h.name} <span class="lat">+${h.ms} ms</span></div>`; };
+      const title = id => `<h2 class="display">${C.hops[hop(id)].title}</h2>`;
+      const total = C.hops.reduce((a, h) => a + h.ms, 0);
+      document.getElementById('strip').innerHTML = `<span><span class="verb">GET</span> /yeshasvi</span>` + C.hops.slice(1).map(h => `<span>→</span><a href="#t-${h.id}">${h.name}</a>`).join('') + `<span class="ok">· ${total} ms</span>`;
+      const s = C.services;
+      document.getElementById('grid').innerHTML = `
+        <section class="tile card hero s8" id="t-client"><div class="who"><span>● ${C.name}</span><span>${C.role}</span><span>${C.location}</span></div>
+          <h1 class="display"><span class="verb">GET</span> /yeshasvi</h1><p class="lede">${C.lede.replace("I'll route you through", 'This page is every hop of')}</p>
+          <div style="display:flex;gap:10px;flex-wrap:wrap"><a class="btn btn-primary" href="#t-response">Get in touch</a><a class="btn btn-ghost" href="#t-services">See the work</a></div></section>
+        <section class="tile card s4" id="t-dns">${tag('dns')}${H.dig()}<p class="sub" style="font-size:14.5px">${C.dns.text[0]}</p></section>
+        <section class="tile card s12 bento-nodes" id="t-lb">${tag('lb')}${title('lb')}<p>${C.lb.sub}</p><div data-lb>${H.nodes()}</div></section>
+        <section class="tile card s7" id="t-waf">${tag('waf')}${title('waf')}<div data-waf>${H.waf()}</div></section>
+        <section class="tile card s5" id="t-gateway">${tag('gateway')}${title('gateway')}<p>${C.routesSub}</p>${H.timeline()}</section>
+        <section class="tile card s12" id="t-services">${tag('services')}${title('services')}
+          <div class="two"><div><span class="badge">${s[0].badge}</span><h3>${s[0].title}</h3><p class="sub" style="margin:10px 0 14px">${s[0].text}</p>${H.chips(s[0].chips)}</div><div data-w="grpc"></div></div></section>
+        <section class="tile card s6"><span class="badge" style="align-self:flex-start">${s[1].badge}</span><h3>${s[1].title}</h3><p>${s[1].text}</p>${H.chips(s[1].chips)}${H.caseRows(s[1].caseRows.slice(0, 3))}</section>
+        <section class="tile card s6"><span class="badge" style="align-self:flex-start">${s[2].badge}</span><h3>${s[2].title}</h3><p>${s[2].text}</p><div data-w="cb"></div></section>
+        <section class="tile card s7" id="t-queue">${tag('queue')}<h3>${C.sage.title}</h3><p>${C.sage.text}</p>${H.sageIntro()}<div data-w="sage"></div></section>
+        <section class="tile card s5">${C.papers.map(p => `<div style="display:grid;gap:8px;padding-bottom:14px;border-bottom:1px dashed var(--line)"><span class="badge" style="justify-self:start">${p.badge}</span><h3 style="margin:0">${p.title}</h3><p class="sub" style="margin:0">${p.text}</p><a class="link" href="${p.link}" target="_blank" rel="noopener">${p.linkLabel}</a></div>`).join('')}
+          <div style="display:grid;gap:8px"><span class="badge" style="justify-self:start">certification</span>${H.cert()}</div></section>
+        <section class="tile card s12" id="t-db">${tag('db')}${title('db')}${H.stack()}</section>
+        <section class="inv s12" id="t-response"><div class="status-line"><span>HTTP/2</span><span class="ok">200 OK</span></div><h2 class="display">${C.hops[hop('response')].title}</h2>
+          <div class="inv-grid"><pre class="resp-h">x-response-time: ${total} ms\nx-hops: 8\ncontent-type: application/human\nconnection: keep-alive</pre><div>${H.json()}<div style="display:flex;gap:10px;margin-top:16px;flex-wrap:wrap"><a class="btn" href="mailto:${C.email}">Email me</a><button class="btn ghost" type="button" data-copy="${C.email}">Copy email</button></div></div></div></section>`;
+      const g = document.getElementById('grid');
+      g.querySelectorAll('[data-waf]').forEach(KIT.mount.waf);
+      g.querySelectorAll('[data-lb]').forEach(KIT.mount.lb);
+      g.querySelectorAll('[data-w]').forEach(el => KIT.mount[el.dataset.w](el));
+      KIT.toolbar('bento');
+    })();
+  </script>
+</body>
+</html>
