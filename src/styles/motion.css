@@ -95,14 +95,17 @@ section.m { padding: clamp(80px, 14vh, 160px) 0; }
 
 /* ---------- 6. timeline, glass, terminal ---------- */
 .tl { position: relative; padding-left: 36px; }
-.tl::before { content: ''; position: absolute; left: 7px; top: 6px; bottom: 6px; width: 2px; background: var(--line); }
-.tl-draw { position: absolute; left: 7px; top: 6px; bottom: 6px; width: 2px; background: var(--accent); transform-origin: top; transform: scaleY(var(--p, 0)); }
-.tl-item { position: relative; padding: 0 0 38px; }
-.tl-item::before { content: ''; position: absolute; left: -36px; top: 8px; width: 16px; height: 16px; border-radius: 50%; background: var(--bg); border: 2px solid var(--accent); }
-.tl-item .when { font: 500 13px var(--mono); color: var(--ink-3); }
-.tl-item h3 { font-family: var(--display); font-weight: var(--display-weight); font-size: clamp(22px, 2.6vw, 34px); letter-spacing: -.03em; margin: 4px 0 2px; }
+.tl::before, .tl-draw { content: ''; position: absolute; left: 7px; top: 11px; bottom: var(--tl-end, 11px); width: 2px; }
+.tl::before { background: var(--line); }
+.tl-draw { background: var(--accent); transform-origin: top; transform: scaleY(var(--p, 0)); }
+.tl-item { position: relative; padding: 0 0 40px; }
+.tl-item:last-child { padding-bottom: 0; }
+/* Dot is centred on the date line (13px text, 1.6 line-height ≈ 21px tall) */
+.tl-item::before { content: ''; position: absolute; left: -36px; top: 3px; width: 16px; height: 16px; border-radius: 50%; background: var(--bg); border: 2px solid var(--accent); }
+.tl-item .when { font: 500 13px/1.6 var(--mono); color: var(--ink-3); }
+.tl-item .path { font-weight: 600; color: var(--accent); margin-right: 10px; }
+.tl-item h3 { font-family: var(--display); font-weight: var(--display-weight); font-size: clamp(22px, 2.6vw, 34px); line-height: 1.12; letter-spacing: -.03em; margin: 6px 0 6px; text-wrap: balance; }
 .tl-item p { margin: 0; color: var(--ink-3); }
-.tl-item .path { font: 600 14px var(--mono); color: var(--accent); margin-right: 10px; }
 .glass { position: relative; border-radius: calc(var(--radius) + 6px); padding: 6px; background: linear-gradient(135deg, color-mix(in srgb, var(--accent) 22%, transparent), transparent 40%, color-mix(in srgb, var(--seg-ser) 18%, transparent)); }
 .glass > .card { background: color-mix(in srgb, var(--bg-elev) 78%, transparent); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); }
 

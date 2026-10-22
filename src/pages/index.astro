@@ -177,8 +177,8 @@ const [core, desk, res] = C.services;
       <div class="tl" data-scroll="view"><i class="tl-draw"></i>
         {C.routes.map((r, i) => (
           <div class="tl-item rv" style={`--d:${i}`}>
-            <span class="when">{r.when}</span>
-            <h3><span class="path">{r.path}</span>{r.role}</h3>
+            <div class="when"><span class="path">{r.path}</span>{r.when}</div>
+            <h3>{r.role}</h3>
             <p set:html={r.where} />
           </div>
         ))}
@@ -281,6 +281,16 @@ const [core, desk, res] = C.services;
       // Style/font switches change the typeface: refit once its font has loaded
       new MutationObserver(() => { fitHero(); document.fonts?.ready.then(fitHero); })
         .observe(document.documentElement, { attributes: true, attributeFilter: ['data-style', 'data-font', 'data-theme'] });
+
+      // ---------- timeline: end the line exactly at the last dot, whatever the text wraps to ----------
+      const tl = root.querySelector('.tl');
+      const fitTimeline = () => {
+        const last = tl.querySelector('.tl-item:last-child');
+        tl.style.setProperty('--tl-end', (tl.offsetHeight - last.offsetTop - 11) + 'px');
+      };
+      fitTimeline();
+      addEventListener('resize', fitTimeline);
+      document.fonts?.ready.then(fitTimeline);
 
       // ---------- rotating word ----------
       const words = [...root.querySelectorAll('.rot-win span')];
