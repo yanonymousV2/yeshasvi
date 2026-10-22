@@ -14,5 +14,3 @@ One post per week, top to bottom. Tick a topic and add the slug when its draft i
 - [ ] Consistent hashing, visually
 - [ ] Observability basics: RED/USE metrics, structured logs, traces
 - [ ] Zero-downtime schema changes with expand/contract
-
-Separate personal post, in progress: `rest-to-grpc`.
