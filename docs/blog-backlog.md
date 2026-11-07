@@ -3,7 +3,7 @@
 One post per week, top to bottom. Tick a topic and add the slug when its draft is written.
 
 - [x] Idempotency keys: making retries safe → `idempotency-keys`
-- [ ] Timeouts, retries and circuit breakers: getting the order right
+- [x] Timeouts, retries and circuit breakers: getting the order right → `timeouts-retries-circuit-breakers`
 - [ ] The outbox pattern: reliable events without distributed transactions
 - [ ] Connection pooling: why your database falls over at 200 requests
 - [ ] Reading `EXPLAIN ANALYZE`: Postgres indexes in practice
