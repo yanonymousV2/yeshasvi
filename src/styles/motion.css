@@ -47,8 +47,9 @@ section.m { padding: clamp(80px, 14vh, 160px) 0; }
 .j-count span.next { transform: translateY(100%); opacity: 0; }
 .j-meta { text-align: right; font: 500 13px var(--mono); color: var(--ink-3); line-height: 1.9; }
 .j-meta b { display: block; font-size: 26px; color: var(--ink); font-variant-numeric: tabular-nums; letter-spacing: -.02em; }
-.j-stage { position: relative; display: grid; align-items: center; }
-.j-svg { width: 100%; height: auto; overflow: visible; }
+/* The diagram takes whatever height the captions leave, so the bar always stays on screen */
+.j-stage { position: relative; display: grid; grid-template-rows: minmax(0, 1fr) auto; gap: 12px; min-height: 0; }
+.j-svg { width: 100%; height: 100%; min-height: 140px; overflow: visible; }
 .j-svg .base { fill: none; stroke: var(--line); stroke-width: 2; }
 .j-svg .draw { fill: none; stroke: var(--accent); stroke-width: 3; stroke-linecap: round; }
 .j-svg .nd circle { fill: var(--bg); stroke: var(--line-strong); stroke-width: 2; transition: fill .3s, stroke .3s, transform .3s; transform-box: fill-box; transform-origin: center; }
@@ -56,12 +57,13 @@ section.m { padding: clamp(80px, 14vh, 160px) 0; }
 .j-svg .nd text { font: 500 13px var(--mono); fill: var(--ink-3); text-anchor: middle; transition: fill .3s; }
 .j-svg .nd.on text { fill: var(--ink); }
 .j-svg .pk { fill: var(--accent); filter: drop-shadow(0 0 10px var(--accent)); }
-.j-caps { position: relative; min-height: 190px; }
-.j-cap { position: absolute; inset: 0 auto auto 0; max-width: 760px; opacity: 0; transform: translateY(24px); transition: opacity .5s, transform .5s cubic-bezier(.2,.7,.1,1); pointer-events: none; }
+/* All captions share one grid cell, so the box is as tall as the tallest caption */
+.j-caps { display: grid; align-items: start; }
+.j-cap { grid-area: 1 / 1; max-width: 760px; opacity: 0; transform: translateY(24px); transition: opacity .5s, transform .5s cubic-bezier(.2,.7,.1,1); pointer-events: none; }
 .j-cap.on { opacity: 1; transform: none; pointer-events: auto; }
 .j-cap .display { font-size: clamp(30px, 4.6vw, 60px); line-height: 1; letter-spacing: -.04em; margin-bottom: 14px; }
 .j-cap p { margin: 0; font-size: 18px; color: var(--ink-2); max-width: 40em; }
-.j-bar { height: 3px; background: var(--line); border-radius: 3px; overflow: hidden; }
+.j-bar { height: 3px; margin-top: 20px; background: var(--line); border-radius: 3px; overflow: hidden; }
 .j-bar i { display: block; height: 100%; background: var(--accent); transform-origin: 0 50%; transform: scaleX(var(--p, 0)); }
 
 /* ---------- 3. spotlight + tilt cards ---------- */
@@ -141,7 +143,7 @@ section.m { padding: clamp(80px, 14vh, 160px) 0; }
   .j-top, .j-bar, .j-svg .pk { display: none; }
   .j-svg .draw { stroke-dashoffset: 0 !important; }
   .j-caps { min-height: 0; display: grid; gap: 40px; margin-top: 30px; }
-  .j-cap { position: static; opacity: 1; transform: none; }
+  .j-cap { grid-area: auto; opacity: 1; transform: none; }
   .mq-track { animation: none; flex-wrap: wrap; width: auto; }
   .tl-draw { transform: none; }
 }
