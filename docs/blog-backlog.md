@@ -4,9 +4,9 @@ One post per week, top to bottom. Tick a topic and add the slug when its draft i
 
 - [x] Idempotency keys: making retries safe → `idempotency-keys`
 - [x] Timeouts, retries and circuit breakers: getting the order right → `timeouts-retries-circuit-breakers`
-- [ ] The outbox pattern: reliable events without distributed transactions
-- [ ] Connection pooling: why your database falls over at 200 requests
-- [ ] Reading `EXPLAIN ANALYZE`: Postgres indexes in practice
+- [x] The outbox pattern: reliable events without distributed transactions → `outbox-pattern`
+- [x] Connection pooling: why your database falls over at 200 requests → `connection-pooling`
+- [x] Reading `EXPLAIN ANALYZE`: Postgres indexes in practice → `reading-explain-analyze`
 - [ ] Backpressure in Go with bounded channels
 - [ ] Rate limiting: token bucket vs sliding window
 - [ ] gRPC deadlines and cancellation propagation
