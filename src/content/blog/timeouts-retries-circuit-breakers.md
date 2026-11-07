@@ -3,7 +3,7 @@ title: "Timeouts, retries and circuit breakers: getting the order right"
 description: "Timeouts, retries and circuit breakers each protect you from a failing dependency, but stacked in the wrong order they make an outage worse. Here's the order that works, why, and a Go implementation with tests."
 pubDate: 2026-11-07
 tags: [reliability, go, http, grpc, distributed-systems]
-draft: true
+draft: false
 ---
 
 A checkout service calls an inventory service. One afternoon the inventory database starts struggling and responses that usually take 40 ms start taking eight seconds.
