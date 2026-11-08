@@ -7,7 +7,7 @@ One post per week, top to bottom. Tick a topic and add the slug when its draft i
 - [x] The outbox pattern: reliable events without distributed transactions → `outbox-pattern`
 - [x] Connection pooling: why your database falls over at 200 requests → `connection-pooling`
 - [x] Reading `EXPLAIN ANALYZE`: Postgres indexes in practice → `reading-explain-analyze`
-- [ ] Backpressure in Go with bounded channels
+- [x] Backpressure in Go with bounded channels → `backpressure-bounded-channels`
 - [ ] Rate limiting: token bucket vs sliding window
 - [ ] gRPC deadlines and cancellation propagation
 - [ ] Cache stampedes and how to stop them
