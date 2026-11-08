@@ -3,7 +3,7 @@ title: "Backpressure in Go with bounded channels"
 description: "When work arrives faster than you can finish it, something has to give, and by default it's your memory. Here's how bounded channels, worker pools and load shedding let a Go service say \"not now\" on purpose, with tested code."
 pubDate: 2026-11-08
 tags: [go, concurrency, reliability, backpressure, http]
-draft: true
+draft: false
 ---
 
 An ingest service receives events over HTTP and forwards each one to a downstream API. To keep responses fast, the handler doesn't wait for the forward. It runs `go forward(event)` and returns `202 Accepted` straight away.
