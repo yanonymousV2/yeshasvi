@@ -214,6 +214,14 @@ const [core, desk, res] = C.services;
             <a class="link" href={C.blog}>Read the blog →</a>
           </article>
         </div>
+        <article class="tile card c12 rv">
+          <span class="badge" style="align-self:flex-start">TypeScript · Claude Code mod · open source</span>
+          <h3>{C.crab.title}</h3>
+          <p>{C.crab.text}</p>
+          <div class="install"><code>{C.crab.install}</code><button class="copy-mini" type="button" data-copy={C.crab.install}>copy</button></div>
+          <a class="link" href={url('/crab-buddy/')}>Play with the demo →</a>
+          <a class="link" href={C.crab.repo} target="_blank" rel="noopener">View on GitHub ↗</a>
+        </article>
       </div>
     </div></section>
 

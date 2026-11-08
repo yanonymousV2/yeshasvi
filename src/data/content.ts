@@ -107,6 +107,12 @@ export const content = {
     install: 'curl -fsSL https://raw.githubusercontent.com/yanonymousV2/sage/main/install.sh | sh',
     repo: 'https://github.com/yanonymousV2/sage',
   },
+  crab: {
+    title: 'crab-buddy: a crab buddy in your terminal',
+    text: "A crab buddy for your terminal: a Claude Code mod that puts Clawd, Claude Code's mascot, right above the prompt, acting out what Claude is doing as it works: thinking, reading files, searching, editing, running commands, and dozing off when idle.",
+    install: '/plugin install crab-buddy --marketplace yanonymousV2/crab-buddy',
+    repo: 'https://github.com/yanonymousV2/crab-buddy',
+  },
   papers: [
     { badge: 'IEEE ICCUBEA · 2023', title: 'Network Traffic Analyzer', text: 'Network traffic analysis for monitoring and security assessment, built with Python and NetworkX.', link: 'https://ieeexplore.ieee.org/document/10392223', linkLabel: 'Read the paper ↗' },
     { badge: 'Springer CCIS', title: 'CDR/IPDR Fraud Detection', text: 'Analytics on telecom call and IP detail records to detect anomalies and fraud patterns.', link: 'https://link.springer.com/chapter/10.1007/978-3-031-59100-63', linkLabel: 'Read the chapter ↗' },

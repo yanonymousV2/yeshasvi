@@ -1,0 +1,271 @@
+---
+// Playable demo of crab-buddy, the Claude Code mod: the same drawing and poses as the
+// mod's hooks/register.tsx, driven by buttons, a scripted session or a typed prompt.
+import Base from '../layouts/Base.astro';
+import SiteNav from '../components/SiteNav.astro';
+import { content as C } from '../data/content';
+import { url } from '../lib/url';
+---
+<Base title="crab-buddy · a crab buddy for your terminal — Yeshasvi" description={C.crab.text}>
+  <Fragment slot="head">
+    <link rel="stylesheet" href={url('/kit/kit.css')}>
+    <style is:global>
+      .cb { max-width: 1040px; margin: 0 auto; padding: clamp(120px, 16vh, 160px) var(--gutter) 120px; display: grid; gap: 28px; }
+      .cb .display { font-size: clamp(40px, 7vw, 88px); line-height: .95; letter-spacing: -.05em; }
+      .cb .lead { font-size: 19px; color: var(--ink-2); margin: 0; max-width: 38em; }
+
+      /* The terminal keeps Claude Code's dark look whatever style the visitor picked. */
+      .term { scroll-margin-top: 110px; --t-bg: #1d1f27; --t-ink: #d6d6d6; --t-dim: #7d808c; --t-line: #3a3d48; --t-crab: #d97757;
+        background: var(--t-bg); color: var(--t-ink); border-radius: 14px; overflow: hidden;
+        font: 15px/1.55 'Geist Mono', ui-monospace, Menlo, monospace; box-shadow: var(--shadow); }
+      .term-bar { display: flex; align-items: center; gap: 8px; padding: 12px 16px; border-bottom: 1px solid var(--t-line); color: var(--t-dim); font-size: 12px; }
+      .term-bar i { width: 11px; height: 11px; border-radius: 50%; background: #3a3d48; }
+      .term-bar span { margin-left: 8px; }
+      .log { height: 230px; overflow: hidden; padding: 18px 20px 4px; display: flex; flex-direction: column; justify-content: flex-end; gap: 2px; }
+      .log div { white-space: pre-wrap; overflow-wrap: anywhere; }
+      .log .you { color: var(--t-ink); }
+      .log .you::before { content: '> '; color: var(--t-dim); }
+      .log .tool::before { content: '⏺ '; color: #6ac46a; }
+      .log .say::before { content: '⏺ '; color: var(--t-ink); }
+      .log .out { color: var(--t-dim); padding-left: 2ch; }
+      .log .out::before { content: '⎿  '; }
+      .band { display: flex; align-items: center; gap: 18px; padding: 14px 20px; min-height: 100px; }
+      .band canvas { image-rendering: pixelated; flex: none; }
+      .band .prop { width: 6ch; color: var(--t-dim); white-space: pre; line-height: 1.15; flex: none; }
+      .band .cap { color: var(--t-crab); font-weight: 600; }
+      .band .cap small { color: var(--t-dim); font-weight: 400; font-size: 1em; margin-left: 1ch; }
+      .band .det { color: var(--t-dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .band .info { min-width: 0; }
+      .band.hidden canvas, .band.hidden .prop { visibility: hidden; }
+      .prompt { display: flex; gap: 1ch; border-top: 1px solid var(--t-line); padding: 12px 20px 16px; }
+      .prompt span { color: var(--t-dim); }
+      .prompt input { flex: 1; min-width: 0; background: none; border: 0; outline: 0; color: var(--t-ink); font: inherit; }
+      .prompt input::placeholder { color: #565a66; }
+
+      .pad { display: grid; gap: 14px; }
+      .pad .row { display: flex; flex-wrap: wrap; gap: 8px; }
+      .pad .btn[aria-pressed="true"] { border-color: var(--accent); color: var(--accent); }
+      .pad .hint, .cb > .hint { font: 13px var(--mono); color: var(--ink-3); margin: 0; }
+      .cb .install { max-width: 100%; }
+      .cb h2 { font-size: clamp(24px, 3vw, 32px); margin: 0; }
+      .cb .facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; }
+      .cb .facts .card { padding: 20px; }
+      .cb .facts h3 { margin: 0 0 6px; font-size: 16px; }
+      .cb .facts p { margin: 0; color: var(--ink-2); font-size: 15px; }
+      @media (max-width: 560px) { .term { font-size: 13px; } .log { height: 200px; } .band { gap: 12px; padding: 10px 14px; } }
+    </style>
+  </Fragment>
+  <SiteNav current="crab" />
+  <main class="cb">
+    <div class="hop-tag"><b>mod</b> claude code · open source <span class="lat">MIT</span></div>
+    <h1 class="display">Meet your crab buddy, <em>in your terminal.</em></h1>
+    <p class="lead">{C.crab.text} Try it below: press a state, play a session, or type a prompt and watch him react.</p>
+
+    <section class="term" id="demo" aria-label="Claude Code demo">
+      <div class="term-bar" aria-hidden="true"><i></i><i></i><i></i><span>claude — ~/project</span></div>
+      <div class="log" id="log" aria-live="polite"></div>
+      <div class="band" id="band">
+        <canvas id="crab" width="10" height="6" aria-label="Clawd the crab"></canvas>
+        <div class="prop" id="prop" aria-hidden="true"></div>
+        <div class="info">
+          <div class="cap" id="cap">Idle</div>
+          <div class="det" id="det">&nbsp;</div>
+        </div>
+      </div>
+      <form class="prompt" id="form" autocomplete="off">
+        <span aria-hidden="true">&gt;</span>
+        <input id="ask" aria-label="Prompt" placeholder="try: fix the failing test   (or /crab to hide him)" maxlength="120">
+      </form>
+    </section>
+
+    <div class="pad">
+      <div class="row">
+        <button class="btn btn-primary btn-sm" type="button" id="play">▶ Play a session</button>
+      </div>
+      <div class="row" id="modes" role="group" aria-label="Pick a state"></div>
+      <p class="hint">Keys 1–9 and 0 pick a state too. Leave him alone for 20 seconds and he dozes off.</p>
+    </div>
+
+    <h2>Install</h2>
+    <div class="install"><code>{C.crab.install}</code><button class="copy-mini" type="button" data-copy={C.crab.install}>copy</button></div>
+    <a class="link" href={C.crab.repo} target="_blank" rel="noopener">View on GitHub ↗</a>
+
+    <div class="facts">
+      <article class="card"><h3>Lives above the prompt</h3><p>A three-row band right over the input line. <code>/crab</code> hides him or brings him back.</p></article>
+      <article class="card"><h3>Reacts to every step</h3><p>Hooks on turns, the model's stream and each tool call pick his pose: reading, searching, editing, running and more.</p></article>
+      <article class="card"><h3>Never in the way</h3><p>He watches tool calls but never blocks or changes one, and a failure in the mod leaves the tool running as usual.</p></article>
+    </div>
+    <p class="hint">Unofficial fan project, not affiliated with or endorsed by Anthropic. Clawd is Claude Code's mascot.</p>
+  </main>
+
+  <script is:inline>
+  (() => {
+    const W = 10, H = 6, SCALE = matchMedia('(max-width: 560px)').matches ? 8 : 12, FRAME = matchMedia('(prefers-reduced-motion: reduce)').matches ? 700 : 300;
+    const SLEEP_AFTER = 20000, CRAB = '#d97757';
+    const CAPTION = { idle: 'Idle', sleeping: 'Sleeping', thinking: 'Thinking', talking: 'Writing a reply', reading: 'Reading',
+      searching: 'Searching', editing: 'Editing', running: 'Running', browsing: 'Browsing the web', delegating: 'Sending a helper',
+      oops: 'Oops', done: 'Done!' };
+    const PICKS = [['thinking', ''], ['reading', 'src/server.go'], ['searching', 'TODO'], ['editing', 'handler.go'], ['running', 'go test ./...'],
+      ['browsing', 'pkg.go.dev'], ['delegating', 'explore the codebase'], ['talking', ''], ['oops', 'Bash'], ['done', '']];
+
+    const cycle = (t, xs) => xs[t % xs.length];
+    const pace = (t, m) => { const a = t % (m * 2); return a <= m ? a : m * 2 - a; };
+    const blinking = (t, eyes = 'open') => (t % 14 === 0 ? 'blink' : eyes);
+
+    // The poses, as in the mod's lookFor.
+    const lookFor = (m, t) => {
+      const s = { eyes: blinking(t), arms: 'out', legs: 'stand', hop: false, shift: 2, bubble: '', prop: ['', '', ''] };
+      switch (m) {
+        case 'idle': return { ...s, hop: t % 24 === 0 };
+        case 'sleeping': return { ...s, eyes: 'shut', arms: 'down', legs: 'tuck', bubble: cycle(t >> 1, ['z', 'z Z', 'z Z z', '']) };
+        case 'thinking': return { ...s, eyes: blinking(t, cycle(t >> 2, ['up', 'right', 'up', 'left'])), arms: t % 8 < 4 ? 'out' : 'wave',
+          bubble: cycle(t, ['·', '· ∘', '· ∘ ○', '· ∘ ○ ?', '· ∘ ○ ?']) };
+        case 'talking': return { ...s, arms: cycle(t, ['out', 'wave']), hop: t % 4 === 0, bubble: cycle(t, ['▁▃', '▃▅▂', '▅▂▆▃', '▂▆▃']) };
+        case 'reading': return { ...s, eyes: blinking(t, cycle(t >> 1, ['left', 'open', 'right', 'open'])), arms: 'down',
+          prop: ['┌───┐', cycle(t >> 1, ['│≡≡≡│', '│≡≡ │', '│≡  │']), '└───┘'] };
+        case 'searching': return { ...s, eyes: cycle(t >> 1, ['left', 'right']), legs: cycle(t, ['stepA', 'stepB']), shift: pace(t, 4),
+          prop: ['', cycle(t, [' ⌕', '  ⌕', ' ⌕', '⌕']), ''] };
+        case 'editing': return { ...s, eyes: 'open', arms: cycle(t, ['wave', 'out']), prop: ['', cycle(t, ['✎ ▁', '✎▁▁', ' ✎▁▁▁', '  ✎▁▁▁▁']), ''] };
+        case 'running': return { ...s, eyes: 'open', legs: cycle(t, ['stepA', 'stepB']), hop: t % 2 === 0, shift: pace(t, 5),
+          prop: ['', cycle(t, ['>_', '>_▌', '>_']), ''] };
+        case 'browsing': return { ...s, eyes: cycle(t >> 1, ['left', 'right']), prop: ['', cycle(t >> 1, ['◐', '◓', '◑', '◒']), ''] };
+        case 'delegating': return { ...s, arms: 'up', bubble: cycle(t, ['→', ' →', '  →', '   →→']) };
+        case 'oops': return { ...s, eyes: 'shut', arms: 'up', bubble: '!' };
+        case 'done': return { ...s, eyes: 'blink', arms: cycle(t, ['up', 'out']), hop: t % 2 === 0, bubble: cycle(t >> 1, ['✦', '✧ ✦', '✦ ✧ ✦']) };
+      }
+    };
+
+    // The pixels, as in the mod's drawCrab, before it packs them into half-blocks.
+    const pixels = (look) => {
+      const px = Array.from({ length: H }, () => Array(W).fill(false));
+      const top = look.hop ? 0 : 1;
+      const fill = (r, a, b, on = true) => { const line = px[top + r]; if (line) for (let c = a; c <= b; c++) line[c] = on; };
+      for (let r = 0; r < 4; r++) fill(r, 2, 7);
+      ({ open: [3, 6], left: [3, 5], right: [4, 6], up: [4, 6], blink: [], shut: [] })[look.eyes].forEach((c) => fill(1, c, c, false));
+      fill({ out: 2, up: 0, wave: 0, down: 3 }[look.arms], 0, 1);
+      fill({ out: 2, up: 0, wave: 2, down: 3 }[look.arms], 8, 9);
+      ({ stand: [2, 4, 5, 7], stepA: [2, 3, 6, 7], stepB: [3, 4, 5, 6], tuck: [] })[look.legs].forEach((c) => fill(4, c, c));
+      return px;
+    };
+
+    const $ = (id) => document.getElementById(id);
+    const canvas = $('crab'), ctx = canvas.getContext('2d'), band = $('band');
+    const COLS = W + 6; // room to walk, as the mod pads the crab
+    canvas.width = COLS * SCALE; canvas.height = H * SCALE;
+    canvas.style.width = `${COLS * SCALE}px`; canvas.style.height = `${H * SCALE}px`;
+
+    let mode = 'idle', detail = '', changedAt = Date.now(), tick = 0, hidden = false, busy = null;
+    const setMode = (m, d = '') => { mode = m; detail = d; changedAt = Date.now(); syncPicks(); draw(); };
+
+    const draw = () => {
+      const look = lookFor(mode, tick);
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = CRAB;
+      pixels(look).forEach((row, y) => row.forEach((on, x) => on && ctx.fillRect((x + look.shift) * SCALE, y * SCALE, SCALE, SCALE)));
+      $('prop').textContent = look.prop.join('\n');
+      const secs = Math.round((Date.now() - changedAt) / 1000);
+      const extra = (mode !== 'idle' && mode !== 'sleeping' && secs >= 2 ? `${secs}s` : '') + (look.bubble ? `  ${look.bubble}` : '');
+      $('cap').innerHTML = '';
+      $('cap').append(CAPTION[mode]);
+      if (extra) { const s = document.createElement('small'); s.textContent = extra; $('cap').append(s); }
+      $('det').textContent = detail || ' ';
+    };
+
+    setInterval(() => {
+      if (mode === 'idle' && !busy && Date.now() - changedAt > SLEEP_AFTER) setMode('sleeping');
+      if ((mode === 'done' || mode === 'oops') && !busy && Date.now() - changedAt > 4000) setMode('idle');
+      tick += 1;
+      if (!hidden) draw();
+    }, FRAME);
+
+    // The transcript above the band.
+    const log = $('log');
+    const say = (cls, text) => {
+      const d = document.createElement('div'); d.className = cls; d.textContent = text; log.append(d);
+      while (log.children.length > 9) log.firstChild.remove();
+    };
+
+    // Scripted sessions: each step is [mode, detail, ms, transcript lines].
+    const tool = (m, d, ms, call, out) => [m, d, ms, [['tool', call], ...(out ? [['out', out]] : [])]];
+    const plans = {
+      test: [tool('reading', 'package.json', 1600, 'Read(package.json)', 'Read 42 lines'),
+        tool('running', 'npm test', 2600, 'Bash(npm test)', '1 failing: parseDate handles UTC offsets'),
+        tool('reading', 'src/date.ts', 1800, 'Read(src/date.ts)', 'Read 88 lines'),
+        tool('editing', 'date.ts', 2000, 'Update(src/date.ts)', 'Updated src/date.ts with 3 additions'),
+        tool('running', 'npm test', 2200, 'Bash(npm test)', '48 passing'),
+        ['talking', '', 2200, [['say', 'Fixed it: parseDate dropped the offset sign. All 48 tests pass now.']]]],
+      search: [tool('searching', 'TODO', 1800, 'Grep(TODO)', 'Found 6 matches in 4 files'),
+        tool('reading', 'server.go', 1800, 'Read(server.go)', 'Read 130 lines'),
+        ['talking', '', 2200, [['say', 'There are 6 TODOs; the two in server.go are about retry limits.']]]],
+      web: [tool('browsing', 'Astro 7 release notes', 2400, 'WebSearch(Astro 7 release notes)', '10 results'),
+        tool('browsing', 'astro.build/blog', 2000, 'Fetch(astro.build/blog)', 'Received 48KB'),
+        ['talking', '', 2200, [['say', 'Astro 7 makes the content layer the default and drops legacy collections.']]]],
+      agent: [tool('delegating', 'Explore the auth flow', 3200, 'Agent(Explore the auth flow)', 'Done (14 tool uses)'),
+        tool('reading', 'auth/session.go', 1600, 'Read(auth/session.go)', 'Read 96 lines'),
+        ['talking', '', 2200, [['say', 'Sessions are signed cookies, refreshed by middleware on each request.']]]],
+      chat: [tool('reading', 'README.md', 1600, 'Read(README.md)', 'Read 60 lines'),
+        ['talking', '', 2400, [['say', "Here's the short version: it's an Astro site deployed to GitHub Pages."]]]],
+    };
+    const planFor = (text) => {
+      const t = text.toLowerCase();
+      if (/test|fix|bug|fail|build|run/.test(t)) return plans.test;
+      if (/find|search|where|grep|todo/.test(t)) return plans.search;
+      if (/web|docs|latest|news|release/.test(t)) return plans.web;
+      if (/agent|explore|codebase|understand|how does/.test(t)) return plans.agent;
+      return plans.chat;
+    };
+
+    const wait = (ms) => new Promise((r) => setTimeout(r, ms));
+    const run = async (prompt, plan) => {
+      const id = (busy = {});
+      say('you', prompt);
+      setMode('thinking');
+      await wait(1600);
+      for (const [m, d, ms, lines] of plan) {
+        if (busy !== id) return;
+        setMode(m, d);
+        lines.forEach(([cls, text]) => say(cls, text));
+        await wait(ms);
+      }
+      if (busy !== id) return;
+      busy = null;
+      setMode('done');
+    };
+
+    $('form').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const text = $('ask').value.trim();
+      if (!text) return;
+      $('ask').value = '';
+      if (text === '/crab') {
+        hidden = !hidden; band.classList.toggle('hidden', hidden);
+        say('you', text); say('out', hidden ? 'Crab hidden. /crab brings it back.' : 'Crab is back.');
+        return;
+      }
+      run(text, planFor(text));
+    });
+    $('play').addEventListener('click', () => run('fix the failing test', plans.test));
+
+    // State buttons.
+    const picks = $('modes');
+    PICKS.forEach(([m, d], i) => {
+      const b = document.createElement('button');
+      b.type = 'button'; b.className = 'btn btn-ghost btn-sm'; b.dataset.mode = m;
+      b.textContent = `${(i + 1) % 10} · ${CAPTION[m]}`;
+      b.addEventListener('click', () => { busy = null; setMode(m, d); });
+      picks.append(b);
+    });
+    const syncPicks = () => picks.querySelectorAll('button').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.mode === mode)));
+    addEventListener('keydown', (e) => {
+      if (e.target.closest('input, textarea') || e.metaKey || e.ctrlKey || e.altKey) return;
+      const i = '1234567890'.indexOf(e.key);
+      if (i >= 0) { busy = null; setMode(...PICKS[i]); }
+    });
+
+    say('out', 'crab-buddy loaded · Clawd is above the prompt');
+    setMode('idle');
+    // A link ending in #demo scrolls to the terminal and starts the session.
+    if (location.hash === '#demo') setTimeout(() => run('fix the failing test', plans.test), 800);
+  })();
+  </script>
+</Base>

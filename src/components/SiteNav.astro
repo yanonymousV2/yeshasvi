@@ -4,7 +4,7 @@ import '../styles/nav.css';
 import { content as C } from '../data/content';
 import { url } from '../lib/url';
 
-interface Props { current: 'home' | 'blog' | 'other' }
+interface Props { current: 'home' | 'blog' | 'crab' | 'other' }
 const { current } = Astro.props;
 // On the homepage the section links are in-page anchors; elsewhere they point back home.
 const home = current === 'home' ? '' : url('/');
@@ -15,6 +15,7 @@ const home = current === 'home' ? '' : url('/');
   <a class="lk hide-sm" href={`${home}#journey`}>journey</a>
   <a class="lk hide-sm" href={`${home}#work`}>work</a>
   <a class="lk" href={C.blog} aria-current={current === 'blog' ? 'page' : undefined}>blog</a>
+  <a class="lk hide-sm" href={url('/crab-buddy/')} aria-current={current === 'crab' ? 'page' : undefined}>crab buddy</a>
   <a class="btn btn-primary btn-sm" href={C.linkedin} target="_blank" rel="noopener">LinkedIn ↗</a>
 </nav>
 <script is:inline>
