@@ -74,7 +74,7 @@ import { url } from '../lib/url';
       </div>
       <form class="prompt" id="form" autocomplete="off">
         <span aria-hidden="true">&gt;</span>
-        <input id="ask" aria-label="Prompt" placeholder="try: fix the failing test   (or /crab to hide him)" maxlength="120">
+        <input id="ask" aria-label="Prompt" placeholder="try: fix the failing test   (or /compact, /crab)" maxlength="120">
       </form>
     </section>
 
@@ -83,7 +83,7 @@ import { url } from '../lib/url';
         <button class="btn btn-primary btn-sm" type="button" id="play">▶ Play a session</button>
       </div>
       <div class="row" id="modes" role="group" aria-label="Pick a state"></div>
-      <p class="hint">Keys 1–9 and 0 pick a state too. Leave him alone for 20 seconds and he dozes off.</p>
+      <p class="hint">Keys 1–9 and 0 pick a state too. Type <code>/compact</code> to squash him, <code>/crab</code> to hide him. Leave him alone for 20 seconds and he dozes off.</p>
     </div>
 
     <h2>Install</h2>
@@ -92,7 +92,7 @@ import { url } from '../lib/url';
 
     <div class="facts">
       <article class="card"><h3>Lives above the prompt</h3><p>A three-row band right over the input line. <code>/crab</code> hides him or brings him back.</p></article>
-      <article class="card"><h3>Reacts to every step</h3><p>Hooks on turns, the model's stream and each tool call pick his pose: reading, searching, editing, running and more.</p></article>
+      <article class="card"><h3>Reacts to every step</h3><p>Hooks on turns, the model's stream and each tool call pick his pose: reading, searching, editing, running, waving when Claude asks you something, and yawning through a long build.</p></article>
       <article class="card"><h3>Never in the way</h3><p>He watches tool calls but never blocks or changes one, and a failure in the mod leaves the tool running as usual.</p></article>
     </div>
     <p class="hint">Unofficial fan project, not affiliated with or endorsed by Anthropic. Clawd is Claude Code's mascot.</p>
@@ -101,19 +101,21 @@ import { url } from '../lib/url';
   <script is:inline>
   (() => {
     const W = 10, H = 6, SCALE = matchMedia('(max-width: 560px)').matches ? 8 : 12, FRAME = matchMedia('(prefers-reduced-motion: reduce)').matches ? 700 : 300;
-    const SLEEP_AFTER = 20000, CRAB = '#d97757';
+    const SLEEP_AFTER = 20000, BORED_AFTER = 20000, CRAB = '#d97757';
     const CAPTION = { idle: 'Idle', sleeping: 'Sleeping', thinking: 'Thinking', talking: 'Writing a reply', reading: 'Reading',
       searching: 'Searching', editing: 'Editing', running: 'Running', browsing: 'Browsing the web', delegating: 'Sending a helper',
-      oops: 'Oops', done: 'Done!' };
+      waiting: 'Waiting for you', compacting: 'Compacting', oops: 'Oops', done: 'Done!' };
+    // [mode, detail, button label]; the first ten get keys 1–9 and 0.
     const PICKS = [['thinking', ''], ['reading', 'src/server.go'], ['searching', 'TODO'], ['editing', 'handler.go'], ['running', 'go test ./...'],
-      ['browsing', 'pkg.go.dev'], ['delegating', 'explore the codebase'], ['talking', ''], ['oops', 'Bash'], ['done', '']];
+      ['browsing', 'pkg.go.dev'], ['delegating', '3 helpers out'], ['waiting', 'a question for you'], ['compacting', 'summarizing the conversation'],
+      ['done', ''], ['talking', ''], ['bored', 'npm run build', 'Long command'], ['oops', 'Bash']];
 
     const cycle = (t, xs) => xs[t % xs.length];
     const pace = (t, m) => { const a = t % (m * 2); return a <= m ? a : m * 2 - a; };
     const blinking = (t, eyes = 'open') => (t % 14 === 0 ? 'blink' : eyes);
 
     // The poses, as in the mod's lookFor.
-    const lookFor = (m, t) => {
+    const lookFor = (m, t, bored) => {
       const s = { eyes: blinking(t), arms: 'out', legs: 'stand', hop: false, shift: 2, bubble: '', prop: ['', '', ''] };
       switch (m) {
         case 'idle': return { ...s, hop: t % 24 === 0 };
@@ -126,10 +128,15 @@ import { url } from '../lib/url';
         case 'searching': return { ...s, eyes: cycle(t >> 1, ['left', 'right']), legs: cycle(t, ['stepA', 'stepB']), shift: pace(t, 4),
           prop: ['', cycle(t, [' ⌕', '  ⌕', ' ⌕', '⌕']), ''] };
         case 'editing': return { ...s, eyes: 'open', arms: cycle(t, ['wave', 'out']), prop: ['', cycle(t, ['✎ ▁', '✎▁▁', ' ✎▁▁▁', '  ✎▁▁▁▁']), ''] };
-        case 'running': return { ...s, eyes: 'open', legs: cycle(t, ['stepA', 'stepB']), hop: t % 2 === 0, shift: pace(t, 5),
+        case 'running': if (bored) return { ...s, eyes: t % 10 < 4 ? 'shut' : 'open', arms: 'down',
+          bubble: cycle(t >> 2, ['…', '', 'yawn', '']), prop: ['', cycle(t, ['>_', '>_▌']), ''] };
+          return { ...s, eyes: 'open', legs: cycle(t, ['stepA', 'stepB']), hop: t % 2 === 0, shift: pace(t, 5),
           prop: ['', cycle(t, ['>_', '>_▌', '>_']), ''] };
         case 'browsing': return { ...s, eyes: cycle(t >> 1, ['left', 'right']), prop: ['', cycle(t >> 1, ['◐', '◓', '◑', '◒']), ''] };
-        case 'delegating': return { ...s, arms: 'up', bubble: cycle(t, ['→', ' →', '  →', '   →→']) };
+        case 'delegating': return { ...s, arms: 'up', bubble: cycle(t, ['→', ' →', '  →', '   ▝▜▛▘']) };
+        case 'waiting': return { ...s, arms: cycle(t, ['up', 'wave']), hop: t % 6 === 0, bubble: cycle(t >> 1, ['hey!', 'hey!', '', '']) };
+        case 'compacting': return { ...s, eyes: t % 4 < 2 ? 'shut' : 'open', arms: 'down', legs: t % 4 < 2 ? 'tuck' : 'stand',
+          bubble: cycle(t >> 1, ['⇊', '⇊ ⇊', '⇊ ⇊ ⇊']) };
         case 'oops': return { ...s, eyes: 'shut', arms: 'up', bubble: '!' };
         case 'done': return { ...s, eyes: 'blink', arms: cycle(t, ['up', 'out']), hop: t % 2 === 0, bubble: cycle(t >> 1, ['✦', '✧ ✦', '✦ ✧ ✦']) };
       }
@@ -154,11 +161,16 @@ import { url } from '../lib/url';
     canvas.width = COLS * SCALE; canvas.height = H * SCALE;
     canvas.style.width = `${COLS * SCALE}px`; canvas.style.height = `${H * SCALE}px`;
 
-    let mode = 'idle', detail = '', changedAt = Date.now(), tick = 0, hidden = false, busy = null;
-    const setMode = (m, d = '') => { mode = m; detail = d; changedAt = Date.now(); syncPicks(); draw(); };
+    let picked = 'idle', mode = 'idle', detail = '', changedAt = Date.now(), tick = 0, hidden = false, busy = null;
+    const setMode = (m, d = '') => {
+      // A long command, without the 20 seconds' wait: the run started a while ago.
+      const bored = m === 'bored';
+      mode = bored ? 'running' : m; detail = d; changedAt = Date.now() - (bored ? BORED_AFTER + 1000 : 0);
+      picked = m; syncPicks(); draw();
+    };
 
     const draw = () => {
-      const look = lookFor(mode, tick);
+      const look = lookFor(mode, tick, Date.now() - changedAt > BORED_AFTER);
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       ctx.fillStyle = CRAB;
       pixels(look).forEach((row, y) => row.forEach((on, x) => on && ctx.fillRect((x + look.shift) * SCALE, y * SCALE, SCALE, SCALE)));
@@ -191,6 +203,8 @@ import { url } from '../lib/url';
       test: [tool('reading', 'package.json', 1600, 'Read(package.json)', 'Read 42 lines'),
         tool('running', 'npm test', 2600, 'Bash(npm test)', '1 failing: parseDate handles UTC offsets'),
         tool('reading', 'src/date.ts', 1800, 'Read(src/date.ts)', 'Read 88 lines'),
+        tool('waiting', 'a question for you', 2400, 'AskUserQuestion(Fix the parser, or update the test?)'),
+        ['thinking', '', 900, [['out', 'You chose: fix the parser']]],
         tool('editing', 'date.ts', 2000, 'Update(src/date.ts)', 'Updated src/date.ts with 3 additions'),
         tool('running', 'npm test', 2200, 'Bash(npm test)', '48 passing'),
         ['talking', '', 2200, [['say', 'Fixed it: parseDate dropped the offset sign. All 48 tests pass now.']]]],
@@ -200,7 +214,7 @@ import { url } from '../lib/url';
       web: [tool('browsing', 'Astro 7 release notes', 2400, 'WebSearch(Astro 7 release notes)', '10 results'),
         tool('browsing', 'astro.build/blog', 2000, 'Fetch(astro.build/blog)', 'Received 48KB'),
         ['talking', '', 2200, [['say', 'Astro 7 makes the content layer the default and drops legacy collections.']]]],
-      agent: [tool('delegating', 'Explore the auth flow', 3200, 'Agent(Explore the auth flow)', 'Done (14 tool uses)'),
+      agent: [tool('delegating', '3 helpers out', 3200, 'Agent × 3 (auth, sessions, middleware)', 'Done (3 agents · 41 tool uses)'),
         tool('reading', 'auth/session.go', 1600, 'Read(auth/session.go)', 'Read 96 lines'),
         ['talking', '', 2200, [['say', 'Sessions are signed cookies, refreshed by middleware on each request.']]]],
       chat: [tool('reading', 'README.md', 1600, 'Read(README.md)', 'Read 60 lines'),
@@ -218,9 +232,7 @@ import { url } from '../lib/url';
     const wait = (ms) => new Promise((r) => setTimeout(r, ms));
     const run = async (prompt, plan) => {
       const id = (busy = {});
-      say('you', prompt);
-      setMode('thinking');
-      await wait(1600);
+      if (prompt) { say('you', prompt); setMode('thinking'); await wait(1600); }
       for (const [m, d, ms, lines] of plan) {
         if (busy !== id) return;
         setMode(m, d);
@@ -229,7 +241,7 @@ import { url } from '../lib/url';
       }
       if (busy !== id) return;
       busy = null;
-      setMode('done');
+      setMode(prompt ? 'done' : 'idle');
     };
 
     $('form').addEventListener('submit', (e) => {
@@ -237,6 +249,11 @@ import { url } from '../lib/url';
       const text = $('ask').value.trim();
       if (!text) return;
       $('ask').value = '';
+      if (text === '/compact') {
+        say('you', text);
+        run(null, [['compacting', 'summarizing the conversation', 2800, [['out', 'Compacted the conversation']]]]);
+        return;
+      }
       if (text === '/crab') {
         hidden = !hidden; band.classList.toggle('hidden', hidden);
         say('you', text); say('out', hidden ? 'Crab hidden. /crab brings it back.' : 'Crab is back.');
@@ -248,18 +265,18 @@ import { url } from '../lib/url';
 
     // State buttons.
     const picks = $('modes');
-    PICKS.forEach(([m, d], i) => {
+    PICKS.forEach(([m, d, label], i) => {
       const b = document.createElement('button');
       b.type = 'button'; b.className = 'btn btn-ghost btn-sm'; b.dataset.mode = m;
-      b.textContent = `${(i + 1) % 10} · ${CAPTION[m]}`;
+      b.textContent = i < 10 ? `${(i + 1) % 10} · ${label || CAPTION[m]}` : label || CAPTION[m];
       b.addEventListener('click', () => { busy = null; setMode(m, d); });
       picks.append(b);
     });
-    const syncPicks = () => picks.querySelectorAll('button').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.mode === mode)));
+    const syncPicks = () => picks.querySelectorAll('button').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.mode === picked)));
     addEventListener('keydown', (e) => {
       if (e.target.closest('input, textarea') || e.metaKey || e.ctrlKey || e.altKey) return;
       const i = '1234567890'.indexOf(e.key);
-      if (i >= 0) { busy = null; setMode(...PICKS[i]); }
+      if (i >= 0) { busy = null; setMode(PICKS[i][0], PICKS[i][1]); }
     });
 
     say('out', 'crab-buddy loaded · Clawd is above the prompt');
