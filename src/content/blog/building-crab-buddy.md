@@ -225,7 +225,9 @@ A mod is a folder with a manifest, a hooks module, and optionally a `marketplace
 
 Settings live in the manifest as `userConfig`: the crab's color, how long until he dozes off, and whether to show the status text. Claude Code builds the settings screen from that, so the mod just reads the values.
 
-I've also submitted it to Anthropic's plugin directory, where it's going through review. Besides the permission hook, the directory asked for a README section saying what each hook does, which is a good habit anyway. Anyone installing a mod that hooks every tool call deserves a plain answer to "what does it do with them?"
+I also submitted it to Anthropic's plugin directory. Besides the permission hook, its validation asked for a README section saying what each hook does, which is a good habit anyway. Anyone installing a mod that hooks every tool call deserves a plain answer to "what does it do with them?"
+
+It didn't get listed in the end. The directory currently accepts mods, plugins that ship a hooks module like this one, only from Verified organizations, and a personal account isn't one. There's no way around that from the code: the hooks module *is* the mod. So crab-buddy installs straight from its GitHub repository with the line above, which works just as well. If the policy opens up, the same repository can go back in for review.
 
 ## The demo and the video
 
