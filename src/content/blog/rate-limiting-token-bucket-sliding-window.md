@@ -3,7 +3,7 @@ title: "Rate limiting: token bucket vs sliding window"
 description: "A fixed \"100 requests per minute\" counter can let 200 requests through in a tenth of a second. Here's how fixed windows, sliding windows and token buckets actually behave, how to return 429 properly, and how to share a limit across instances with Redis, with tested Go code."
 pubDate: 2026-11-15
 tags: [rate-limiting, api-design, reliability, go, redis, http]
-draft: true
+draft: false
 ---
 
 An API allows each client 100 requests per minute. The implementation is the obvious one: a counter per client per minute, reset when the clock ticks over. It's simple, it's fast, and it's easy to explain in the docs.
