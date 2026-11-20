@@ -8,7 +8,7 @@ One post per week, top to bottom. Tick a topic and add the slug when its draft i
 - [x] Connection pooling: why your database falls over at 200 requests → `connection-pooling`
 - [x] Reading `EXPLAIN ANALYZE`: Postgres indexes in practice → `reading-explain-analyze`
 - [x] Backpressure in Go with bounded channels → `backpressure-bounded-channels`
-- [ ] Rate limiting: token bucket vs sliding window
+- [x] Rate limiting: token bucket vs sliding window → `rate-limiting-token-bucket-sliding-window`
 - [ ] gRPC deadlines and cancellation propagation
 - [ ] Cache stampedes and how to stop them
 - [ ] Consistent hashing, visually
