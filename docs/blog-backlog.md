@@ -9,7 +9,7 @@ One post per week, top to bottom. Tick a topic and add the slug when its draft i
 - [x] Reading `EXPLAIN ANALYZE`: Postgres indexes in practice → `reading-explain-analyze`
 - [x] Backpressure in Go with bounded channels → `backpressure-bounded-channels`
 - [x] Rate limiting: token bucket vs sliding window → `rate-limiting-token-bucket-sliding-window`
-- [ ] gRPC deadlines and cancellation propagation
+- [x] gRPC deadlines and cancellation propagation → `grpc-deadlines-cancellation`
 - [ ] Cache stampedes and how to stop them
 - [ ] Consistent hashing, visually
 - [ ] Observability basics: RED/USE metrics, structured logs, traces
